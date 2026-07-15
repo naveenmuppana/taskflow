@@ -3,19 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow</title>
+    <title>TaskFlow | Welcome</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div id="app">
-        <!-- Auth View -->
-        <div id="auth-view" class="view active">
-            <div class="glass-card auth-card">
+<body class="auth-page">
+    <div class="auth-split-layout">
+        
+        <!-- Left Side: Branding / Aesthetic -->
+        <div class="auth-brand">
+            <div class="brand-content">
                 <h1>TaskFlow</h1>
-                <p class="subtitle">Organize your work, effortlessly.</p>
+                <p>Organize your work, effortlessly.<br>The professional way to get things done.</p>
+            </div>
+            <!-- Decorative Elements -->
+            <div class="glass-orb orb-1"></div>
+            <div class="glass-orb orb-2"></div>
+        </div>
+
+        <!-- Right Side: Forms -->
+        <div class="auth-form-container">
+            <div class="glass-card auth-card">
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Enter your credentials to access your dashboard.</p>
                 
                 <div class="tabs">
                     <button class="tab active" onclick="switchAuthTab('login')">Login</button>
@@ -24,7 +36,7 @@
 
                 <form id="auth-form" onsubmit="handleAuth(event)">
                     <div class="input-group">
-                        <label for="email">Email</label>
+                        <label for="email">Email Address</label>
                         <input type="email" id="email" required placeholder="you@example.com">
                     </div>
                     <div class="input-group">
@@ -37,48 +49,11 @@
             </div>
         </div>
 
-        <!-- Dashboard View -->
-        <div id="dashboard-view" class="view">
-            <header class="glass-header">
-                <h2>TaskFlow</h2>
-                <div class="user-actions">
-                    <span id="user-email"></span>
-                    <button class="btn-outline" onclick="logout()">Logout</button>
-                </div>
-            </header>
-            
-            <main class="dashboard-content">
-                <section class="task-creation glass-card">
-                    <h3>Create New Task</h3>
-                    <form id="task-form" onsubmit="createTask(event)">
-                        <div class="input-group">
-                            <input type="text" id="task-title" required placeholder="What needs to be done?">
-                        </div>
-                        <div class="input-group">
-                            <textarea id="task-desc" placeholder="Add some details... (optional)" rows="2"></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary">Add Task</button>
-                    </form>
-                </section>
-
-                <section class="task-list-section">
-                    <div class="task-filters">
-                        <button class="filter-btn active" data-filter="ALL" onclick="filterTasks('ALL')">All</button>
-                        <button class="filter-btn" data-filter="PENDING" onclick="filterTasks('PENDING')">Pending</button>
-                        <button class="filter-btn" data-filter="IN_PROGRESS" onclick="filterTasks('IN_PROGRESS')">In Progress</button>
-                        <button class="filter-btn" data-filter="COMPLETED" onclick="filterTasks('COMPLETED')">Completed</button>
-                    </div>
-                    <div id="tasks-container">
-                        <!-- Tasks injected here by JS -->
-                    </div>
-                </section>
-            </main>
-        </div>
     </div>
 
     <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
 
-    <script src="app.js"></script>
+    <script src="auth.js"></script>
 </body>
 </html>

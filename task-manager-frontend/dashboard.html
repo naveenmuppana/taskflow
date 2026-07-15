@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-card">
+            <div class="sidebar-brand">
+                <h2>TaskFlow</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <p class="nav-label">VIEWS</p>
+                <button class="nav-btn active" data-filter="ALL" onclick="filterTasks('ALL')">
+                    <span class="icon">⊞</span> All Tasks
+                </button>
+                <button class="nav-btn" data-filter="PENDING" onclick="filterTasks('PENDING')">
+                    <span class="icon">○</span> Pending
+                </button>
+                <button class="nav-btn" data-filter="IN_PROGRESS" onclick="filterTasks('IN_PROGRESS')">
+                    <span class="icon">◐</span> In Progress
+                </button>
+                <button class="nav-btn" data-filter="COMPLETED" onclick="filterTasks('COMPLETED')">
+                    <span class="icon">●</span> Completed
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Top Navbar -->
+            <header class="top-nav glass-header">
+                <h2 id="current-view-title">All Tasks</h2>
+                <div class="user-profile">
+                    <span class="avatar">👤</span>
+                    <span id="user-email">User</span>
+                    <button class="btn-outline btn-sm" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <!-- Tasks Container -->
+            <div class="tasks-scroll-area">
+                <div id="tasks-container">
+                    <!-- Tasks injected by JS -->
+                </div>
+            </div>
+
+            <!-- Floating Action Button (FAB) -->
+            <button class="fab" onclick="openModal()" title="Add New Task">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+
+        </main>
+    </div>
+
+    <!-- Create Task Modal -->
+    <div id="task-modal" class="modal-overlay">
+        <div class="glass-card modal-content">
+            <div class="modal-header">
+                <h3>Create New Task</h3>
+                <button class="btn-icon close-modal" onclick="closeModal()">✕</button>
+            </div>
+            <form id="task-form" onsubmit="createTask(event)">
+                <div class="input-group">
+                    <label for="task-title">Title</label>
+                    <input type="text" id="task-title" required placeholder="What needs to be done?">
+                </div>
+                <div class="input-group">
+                    <label for="task-desc">Description (Optional)</label>
+                    <textarea id="task-desc" placeholder="Add some details..." rows="4"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,49 +1,39 @@
 const API_URL = 'http://localhost:8000/api/v1';
 
-// State
-let token = localStorage.getItem('token');
-let currentAuthTab = 'login';
+// State & Auth Guard
+const token = localStorage.getItem('token');
+const userEmail = localStorage.getItem('userEmail');
+
+if (!token) {
+    // Kicked out if not logged in
+    window.location.href = 'index.html';
+}
+
 let currentFilter = 'ALL';
 let tasks = [];
 
 // DOM Elements
-const authView = document.getElementById('auth-view');
-const dashboardView = document.getElementById('dashboard-view');
-const authSubmitBtn = document.getElementById('auth-submit');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const authError = document.getElementById('auth-error');
 const tasksContainer = document.getElementById('tasks-container');
+const userEmailSpan = document.getElementById('user-email');
+const currentViewTitle = document.getElementById('current-view-title');
+const taskModal = document.getElementById('task-modal');
+const taskTitleInput = document.getElementById('task-title');
+const taskDescInput = document.getElementById('task-desc');
 
 // Initialization
 function init() {
-    if (token) {
-        showDashboard();
-    } else {
-        showAuth();
-    }
-}
-
-// --- Views & UI ---
-function showAuth() {
-    authView.classList.add('active');
-    dashboardView.classList.remove('active');
-}
-
-function showDashboard() {
-    authView.classList.remove('active');
-    dashboardView.classList.add('active');
+    userEmailSpan.textContent = userEmail || 'User';
     fetchTasks();
 }
 
-function switchAuthTab(tab) {
-    currentAuthTab = tab;
-    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    authSubmitBtn.textContent = tab === 'login' ? 'Login' : 'Register';
-    authError.textContent = '';
+// --- Navigation & Logout ---
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
+    window.location.href = 'index.html';
 }
 
+// --- Toast Notifications ---
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -52,76 +42,33 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// --- Authentication ---
-async function handleAuth(e) {
-    e.preventDefault();
-    authError.textContent = '';
-    const email = emailInput.value;
-    const password = passwordInput.value;
+// --- Modal Management (FAB) ---
+function openModal() {
+    taskModal.classList.add('active');
+    taskTitleInput.focus();
+}
 
-    try {
-        if (currentAuthTab === 'login') {
-            await login(email, password);
-        } else {
-            await register(email, password);
-            showToast('Registration successful! Logging you in...');
-            await login(email, password);
-        }
-    } catch (err) {
-        authError.textContent = err.message;
+function closeModal() {
+    taskModal.classList.remove('active');
+    taskTitleInput.value = '';
+    taskDescInput.value = '';
+}
+
+// Close modal if clicked outside
+taskModal.addEventListener('click', (e) => {
+    if (e.target === taskModal) {
+        closeModal();
     }
-}
+});
 
-async function login(email, password) {
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
-
-    const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Login failed');
-
-    token = data.access_token;
-    localStorage.setItem('token', token);
-    document.getElementById('user-email').textContent = email;
-    showDashboard();
-}
-
-async function register(email, password) {
-    const res = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    
-    const data = await res.json();
-    if (!res.ok) {
-        // FastAPI sometimes returns array of Validation errors
-        if (Array.isArray(data.detail)) {
-            throw new Error(data.detail[0].msg);
-        }
-        throw new Error(data.detail || 'Registration failed');
-    }
-}
-
-function logout() {
-    token = null;
-    localStorage.removeItem('token');
-    showAuth();
-}
-
-// --- Task Management ---
+// --- Task API Operations ---
 async function fetchTasks() {
     try {
         const res = await fetch(`${API_URL}/tasks/`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.status === 401) return logout();
+        
+        if (res.status === 401) return logout(); // Token expired
         
         tasks = await res.json();
         renderTasks();
@@ -132,8 +79,6 @@ async function fetchTasks() {
 
 async function createTask(e) {
     e.preventDefault();
-    const titleInput = document.getElementById('task-title');
-    const descInput = document.getElementById('task-desc');
     
     try {
         const res = await fetch(`${API_URL}/tasks/`, {
@@ -143,16 +88,15 @@ async function createTask(e) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                title: titleInput.value,
-                description: descInput.value || null
+                title: taskTitleInput.value,
+                description: taskDescInput.value || null
             })
         });
 
         if (res.ok) {
-            titleInput.value = '';
-            descInput.value = '';
+            closeModal();
             showToast('Task created!');
-            fetchTasks();
+            fetchTasks(); // Refresh list
         } else {
             const data = await res.json();
             showToast(Array.isArray(data.detail) ? data.detail[0].msg : data.detail, 'danger');
@@ -202,10 +146,20 @@ async function deleteTask(id) {
     }
 }
 
+// --- UI Rendering ---
 function filterTasks(status) {
     currentFilter = status;
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    
+    // Update active nav button
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    
+    // Update Header Title
+    if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
+    else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
+    else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
+    else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
+
     renderTasks();
 }
 
@@ -217,7 +171,13 @@ function renderTasks() {
         : tasks.filter(t => t.status === currentFilter);
 
     if (filteredTasks.length === 0) {
-        tasksContainer.innerHTML = `<p style="text-align:center; color:var(--text-secondary); margin-top:2rem;">No tasks found.</p>`;
+        tasksContainer.innerHTML = `
+            <div class="empty-state">
+                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📭</div>
+                <h3>No tasks found</h3>
+                <p>Click the + button in the corner to create one.</p>
+            </div>
+        `;
         return;
     }
 
@@ -241,7 +201,7 @@ function renderTasks() {
                 </div>
             </div>
             <div class="task-actions">
-                <button class="btn-icon" onclick="updateTaskStatus(${task.id}, '${nextStatus}')" title="Toggle Status">${icon}</button>
+                <button class="btn-icon" onclick="updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
                 <button class="btn-icon delete" onclick="deleteTask(${task.id})" title="Delete Task">✕</button>
             </div>
         `;
