@@ -32,6 +32,13 @@
                 <button class="nav-btn" data-filter="COMPLETED" onclick="filterTasks('COMPLETED')">
                     <span class="icon">●</span> Completed
                 </button>
+                <div class="nav-divider"></div>
+                <button class="nav-btn" onclick="openCategoryModal()">
+                    <span class="icon">🏷️</span> Manage Categories
+                </button>
+                <button class="nav-btn" onclick="openTagModal()">
+                    <span class="icon">🔖</span> Manage Tags
+                </button>
             </nav>
         </aside>
 
@@ -93,7 +100,10 @@
                         <option value="HIGH">High</option>
                         <option value="CRITICAL">Critical</option>
                     </select>
-                    <input type="text" id="filter-category" placeholder="Filter category..." oninput="debounceSearch()">
+                    <select id="filter-category" onchange="applyFilters()">
+                        <option value="">All Categories</option>
+                        <!-- Categories injected here -->
+                    </select>
                 </div>
                 <div class="sorting">
                     <select id="sort-select" onchange="applyFilters()">
@@ -153,10 +163,33 @@
                         <input type="datetime-local" id="task-due-date">
                     </div>
                 </div>
-                <div class="input-group">
-                    <label for="task-category">Category (Optional)</label>
-                    <input type="text" id="task-category" placeholder="e.g. Work, Personal">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="task-category">Category (Optional)</label>
+                        <select id="task-category">
+                            <option value="">None</option>
+                            <!-- Categories injected here -->
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="task-tags">Tags (Optional)</label>
+                        <select id="task-tags" multiple style="height: auto; min-height: 42px;">
+                            <!-- Tags injected here -->
+                        </select>
+                    </div>
                 </div>
+                
+                <div id="subtasks-section" style="display: none; margin-bottom: 1rem;">
+                    <h4>Subtasks</h4>
+                    <div id="subtasks-list" style="margin-bottom: 0.5rem; max-height: 150px; overflow-y: auto;">
+                        <!-- Subtasks injected here -->
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="new-subtask-title" placeholder="New subtask..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <button type="button" class="btn-outline btn-sm" onclick="addSubtask()">Add</button>
+                    </div>
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn-primary">Save Task</button>
@@ -164,6 +197,63 @@
             </form>
         </div>
     </div>
+
+    <!-- Manage Categories Modal -->
+    <div id="category-modal" class="modal-overlay">
+        <div class="glass-card modal-content">
+            <div class="modal-header">
+                <h3>Manage Categories</h3>
+                <button class="btn-icon close-modal" onclick="closeCategoryModal()">✕</button>
+            </div>
+            
+            <form id="category-form" onsubmit="saveCategory(event)" style="margin-bottom: 20px;">
+                <div class="input-row">
+                    <div class="input-group" style="flex: 3;">
+                        <input type="text" id="new-category-name" required placeholder="New Category Name">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <input type="color" id="new-category-color" value="#8b5cf6" style="width: 100%; height: 42px; padding: 2px;">
+                    </div>
+                    <button type="submit" class="btn-primary" style="align-self: center;">Add</button>
+                </div>
+            </form>
+
+            <div class="categories-list-container" style="max-height: 200px; overflow-y: auto;">
+                <ul id="categories-list" class="styled-list">
+                    <!-- Categories injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Tags Modal -->
+    <div id="tag-modal" class="modal-overlay">
+        <div class="glass-card modal-content">
+            <div class="modal-header">
+                <h3>Manage Tags</h3>
+                <button class="btn-icon close-modal" onclick="closeTagModal()">✕</button>
+            </div>
+            
+            <form id="tag-form" onsubmit="saveTag(event)" style="margin-bottom: 20px;">
+                <div class="input-row">
+                    <div class="input-group" style="flex: 3;">
+                        <input type="text" id="new-tag-name" required placeholder="New Tag Name">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <input type="color" id="new-tag-color" value="#10b981" style="width: 100%; height: 42px; padding: 2px;">
+                    </div>
+                    <button type="submit" class="btn-primary" style="align-self: center;">Add</button>
+                </div>
+            </form>
+
+            <div class="tags-list-container" style="max-height: 200px; overflow-y: auto;">
+                <ul id="tags-list" class="styled-list">
+                    <!-- Tags injected here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
