@@ -13,6 +13,7 @@ from app.core.exceptions import setup_exception_handlers
 from app.core.logger import setup_logging
 from app.core.rate_limit import limiter
 from app.db.session import engine
+import app.models  # noqa: Load models for SQLAlchemy registry
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
