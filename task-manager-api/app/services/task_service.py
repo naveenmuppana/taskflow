@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy import or_, desc, asc, func
 from datetime import datetime, timezone
 from app.models.task import Task, TaskStatus, TaskPriority
+from app.models.tag import Tag
 from app.schemas.task import TaskCreate, TaskUpdate, TaskStatsResponse
 from app.core.exceptions import TaskNotFoundException, ForbiddenException
 
@@ -16,10 +18,10 @@ class TaskService:
         search: str | None = None,
         status: TaskStatus | None = None,
         priority: TaskPriority | None = None,
-        category: str | None = None,
+        category_id: int | None = None,
         sort_by: str = "newest"
     ) -> list[Task]:
-        query = select(Task).where(Task.owner_id == owner_id)
+        query = select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks)).where(Task.owner_id == owner_id)
         
         if search:
             query = query.where(
@@ -32,13 +34,13 @@ class TaskService:
             query = query.where(Task.status == status)
         if priority:
             query = query.where(Task.priority == priority)
-        if category:
-            query = query.where(Task.category.ilike(f"%{category}%"))
+        if category_id is not None:
+            query = query.where(Task.category_id == category_id)
             
         if sort_by == "oldest":
             query = query.order_by(asc(Task.created_at))
         elif sort_by == "due_date":
-            query = query.order_by(asc(Task.due_date).nulls_last())
+            query = query.order_by(Task.due_date.is_(None), asc(Task.due_date))
         elif sort_by == "priority":
             # Just ordering by enum value (alphabetically) since sqlite doesn't easily support custom ordering
             query = query.order_by(desc(Task.priority))
@@ -76,11 +78,10 @@ class TaskService:
         pending = pending_result.scalar() or 0
 
         # Get overdue tasks (status not completed and due_date < now)
-        now_utc = datetime.now(timezone.utc)
         overdue_query = select(func.count(Task.id)).where(
             Task.owner_id == owner_id,
             Task.status != TaskStatus.COMPLETED,
-            Task.due_date < now_utc
+            Task.due_date < func.now()
         )
         overdue_result = await db.execute(overdue_query)
         overdue = overdue_result.scalar() or 0
@@ -94,7 +95,7 @@ class TaskService:
 
     @staticmethod
     async def get_task_by_id(db: AsyncSession, task_id: int) -> Task | None:
-        result = await db.execute(select(Task).where(Task.id == task_id))
+        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks)).where(Task.id == task_id))
         return result.scalars().first()
 
     @classmethod
@@ -116,13 +117,20 @@ class TaskService:
             status=task_in.status,
             priority=task_in.priority,
             due_date=task_in.due_date,
-            category=task_in.category,
+            category_id=task_in.category_id,
             owner_id=owner_id
         )
+        if task_in.tag_ids:
+            tags_result = await db.execute(select(Tag).where(Tag.id.in_(task_in.tag_ids), Tag.owner_id == owner_id))
+            db_task.tags = list(tags_result.scalars().all())
+
         db.add(db_task)
         await db.commit()
         await db.refresh(db_task)
-        return db_task
+        
+        # Manually load the tags, category and subtasks if needed
+        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks)).where(Task.id == db_task.id))
+        return result.scalars().first()
 
     @classmethod
     async def update_task(
@@ -131,6 +139,14 @@ class TaskService:
         db_task = await cls.get_task(db, task_id, owner_id)
         
         update_data = task_in.model_dump(exclude_unset=True)
+        if "tag_ids" in update_data:
+            tag_ids = update_data.pop("tag_ids")
+            if tag_ids:
+                tags_result = await db.execute(select(Tag).where(Tag.id.in_(tag_ids), Tag.owner_id == owner_id))
+                db_task.tags = list(tags_result.scalars().all())
+            else:
+                db_task.tags = []
+
         for field, value in update_data.items():
             setattr(db_task, field, value)
             

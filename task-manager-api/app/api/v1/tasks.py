@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Request
+from fastapi import APIRouter, status, Request, Query
 
 from app.api.deps import DBDep, CurrentUserDep, PaginationDep
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskStatsResponse
@@ -37,8 +37,8 @@ async def read_tasks(
     search: str | None = None,
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
-    category: str | None = None,
-    sort_by: str = "newest"
+    category_id: int | None = None,
+    sort_by: str = Query("newest", description="Sort by: newest, oldest, due_date, priority, alphabetically")
 ):
     return await TaskService.get_tasks(
         db, 
@@ -48,7 +48,7 @@ async def read_tasks(
         search=search,
         status=status,
         priority=priority,
-        category=category,
+        category_id=category_id,
         sort_by=sort_by
     )
 

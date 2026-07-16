@@ -1,6 +1,9 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from app.models.task import TaskStatus, TaskPriority
+from app.schemas.category import CategoryResponse
+from app.schemas.tag import TagResponse
+from app.schemas.subtask import SubtaskResponse
 
 class TaskBase(BaseModel):
     title: str = Field(
@@ -28,10 +31,13 @@ class TaskBase(BaseModel):
         None,
         description="Optional due date for the task."
     )
-    category: str | None = Field(
+    category_id: int | None = Field(
         None,
-        max_length=100,
-        description="Category of the task."
+        description="Category ID of the task."
+    )
+    tag_ids: list[int] | None = Field(
+        None,
+        description="List of tag IDs associated with the task."
     )
 
 class TaskCreate(TaskBase):
@@ -61,10 +67,13 @@ class TaskUpdate(BaseModel):
         None,
         description="Updated due date of the task."
     )
-    category: str | None = Field(
+    category_id: int | None = Field(
         None,
-        max_length=100,
-        description="Updated category of the task."
+        description="Updated category ID of the task."
+    )
+    tag_ids: list[int] | None = Field(
+        None,
+        description="Updated list of tag IDs for the task."
     )
 
 class TaskResponse(TaskBase):
@@ -72,6 +81,9 @@ class TaskResponse(TaskBase):
     owner_id: int = Field(..., description="ID of the user who owns the task.")
     created_at: datetime = Field(..., description="Creation timestamp.")
     updated_at: datetime = Field(..., description="Last update timestamp.")
+    category: CategoryResponse | None = Field(None, description="The category object.")
+    tags: list[TagResponse] = Field(default_factory=list, description="The list of tags.")
+    subtasks: list[SubtaskResponse] = Field(default_factory=list, description="The list of subtasks.")
 
     model_config = ConfigDict(from_attributes=True)
 

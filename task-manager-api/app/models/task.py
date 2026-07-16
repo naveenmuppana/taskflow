@@ -8,6 +8,9 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.category import Category
+    from app.models.tag import Tag
+    from app.models.subtask import Subtask
 
 class TaskStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -38,7 +41,7 @@ class Task(Base):
         nullable=False
     )
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    category: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -49,3 +52,8 @@ class Task(Base):
     
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner: Mapped["User"] = relationship(back_populates="tasks")
+    category: Mapped["Category"] = relationship(back_populates="tasks")
+    tags: Mapped[list["Tag"]] = relationship(
+        secondary="task_tags", back_populates="tasks"
+    )
+    subtasks: Mapped[list["Subtask"]] = relationship(back_populates="task", cascade="all, delete-orphan")

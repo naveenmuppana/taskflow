@@ -6,6 +6,8 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.task import Task
+    from app.models.category import Category
+    from app.models.tag import Tag
 
 class User(Base):
     __tablename__ = "users"
@@ -13,7 +15,8 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_superuser: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
@@ -22,3 +25,5 @@ class User(Base):
     )
     
     tasks: Mapped[list["Task"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    categories: Mapped[list["Category"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    tags: Mapped[list["Tag"]] = relationship(back_populates="owner", cascade="all, delete-orphan")

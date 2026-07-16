@@ -24,6 +24,9 @@ if config.config_file_name is not None:
 from app.db.base import Base
 from app.models.user import User  # noqa
 from app.models.task import Task  # noqa
+from app.models.category import Category  # noqa
+from app.models.tag import Tag, task_tags  # noqa
+from app.models.subtask import Subtask  # noqa
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -50,6 +53,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -57,7 +61,7 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
 
     with context.begin_transaction():
         context.run_migrations()
