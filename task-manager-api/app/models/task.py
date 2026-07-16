@@ -19,6 +19,7 @@ class TaskPriority(str, enum.Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -37,6 +38,7 @@ class Task(Base):
         nullable=False
     )
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    category: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

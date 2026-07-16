@@ -1,22 +1,96 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.task import Task
-from app.schemas.task import TaskCreate, TaskUpdate
+from sqlalchemy import or_, desc, asc, func
+from datetime import datetime, timezone
+from app.models.task import Task, TaskStatus, TaskPriority
+from app.schemas.task import TaskCreate, TaskUpdate, TaskStatsResponse
 from app.core.exceptions import TaskNotFoundException, ForbiddenException
 
 class TaskService:
     @staticmethod
     async def get_tasks(
-        db: AsyncSession, owner_id: int, skip: int = 0, limit: int = 100
+        db: AsyncSession, 
+        owner_id: int, 
+        skip: int = 0, 
+        limit: int = 100,
+        search: str | None = None,
+        status: TaskStatus | None = None,
+        priority: TaskPriority | None = None,
+        category: str | None = None,
+        sort_by: str = "newest"
     ) -> list[Task]:
-        result = await db.execute(
-            select(Task)
-            .where(Task.owner_id == owner_id)
-            .offset(skip)
-            .limit(limit)
-            .order_by(Task.id.desc())
-        )
+        query = select(Task).where(Task.owner_id == owner_id)
+        
+        if search:
+            query = query.where(
+                or_(
+                    Task.title.ilike(f"%{search}%"),
+                    Task.description.ilike(f"%{search}%")
+                )
+            )
+        if status:
+            query = query.where(Task.status == status)
+        if priority:
+            query = query.where(Task.priority == priority)
+        if category:
+            query = query.where(Task.category.ilike(f"%{category}%"))
+            
+        if sort_by == "oldest":
+            query = query.order_by(asc(Task.created_at))
+        elif sort_by == "due_date":
+            query = query.order_by(asc(Task.due_date).nulls_last())
+        elif sort_by == "priority":
+            # Just ordering by enum value (alphabetically) since sqlite doesn't easily support custom ordering
+            query = query.order_by(desc(Task.priority))
+        elif sort_by == "alphabetically":
+            query = query.order_by(asc(Task.title))
+        else:
+            query = query.order_by(desc(Task.created_at))
+
+        query = query.offset(skip).limit(limit)
+        
+        result = await db.execute(query)
         return list(result.scalars().all())
+
+    @staticmethod
+    async def get_task_stats(db: AsyncSession, owner_id: int) -> TaskStatsResponse:
+        # Get total tasks
+        total_query = select(func.count(Task.id)).where(Task.owner_id == owner_id)
+        total_result = await db.execute(total_query)
+        total = total_result.scalar() or 0
+
+        # Get completed tasks
+        completed_query = select(func.count(Task.id)).where(
+            Task.owner_id == owner_id, 
+            Task.status == TaskStatus.COMPLETED
+        )
+        completed_result = await db.execute(completed_query)
+        completed = completed_result.scalar() or 0
+
+        # Get pending/in progress tasks
+        pending_query = select(func.count(Task.id)).where(
+            Task.owner_id == owner_id, 
+            Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS])
+        )
+        pending_result = await db.execute(pending_query)
+        pending = pending_result.scalar() or 0
+
+        # Get overdue tasks (status not completed and due_date < now)
+        now_utc = datetime.now(timezone.utc)
+        overdue_query = select(func.count(Task.id)).where(
+            Task.owner_id == owner_id,
+            Task.status != TaskStatus.COMPLETED,
+            Task.due_date < now_utc
+        )
+        overdue_result = await db.execute(overdue_query)
+        overdue = overdue_result.scalar() or 0
+
+        return TaskStatsResponse(
+            total_tasks=total,
+            completed_tasks=completed,
+            pending_tasks=pending,
+            overdue_tasks=overdue
+        )
 
     @staticmethod
     async def get_task_by_id(db: AsyncSession, task_id: int) -> Task | None:
@@ -40,6 +114,9 @@ class TaskService:
             title=task_in.title,
             description=task_in.description,
             status=task_in.status,
+            priority=task_in.priority,
+            due_date=task_in.due_date,
+            category=task_in.category,
             owner_id=owner_id
         )
         db.add(db_task)

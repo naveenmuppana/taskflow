@@ -1,17 +1,31 @@
 from fastapi import APIRouter, status, Request
 
 from app.api.deps import DBDep, CurrentUserDep, PaginationDep
-from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse, TaskStatsResponse
 from app.services.task_service import TaskService
 from app.core.rate_limit import limiter
 
 router = APIRouter()
 
+from app.models.task import TaskStatus, TaskPriority
+
+@router.get(
+    "/stats",
+    response_model=TaskStatsResponse,
+    summary="Get task statistics",
+    description="Retrieves counts for total, completed, pending, and overdue tasks."
+)
+async def get_task_stats(
+    db: DBDep,
+    current_user: CurrentUserDep
+):
+    return await TaskService.get_task_stats(db, owner_id=current_user.id)
+
 @router.get(
     "/", 
     response_model=list[TaskResponse],
     summary="List all tasks",
-    description="Retrieves a paginated list of all tasks owned by the currently authenticated user.",
+    description="Retrieves a paginated list of all tasks owned by the currently authenticated user. Supports searching, filtering, and sorting.",
     response_description="A list of task objects"
 )
 @limiter.limit("60/minute")
@@ -20,12 +34,22 @@ async def read_tasks(
     db: DBDep,
     current_user: CurrentUserDep,
     pagination: PaginationDep,
+    search: str | None = None,
+    status: TaskStatus | None = None,
+    priority: TaskPriority | None = None,
+    category: str | None = None,
+    sort_by: str = "newest"
 ):
     return await TaskService.get_tasks(
         db, 
         owner_id=current_user.id, 
         skip=pagination.skip, 
-        limit=pagination.limit
+        limit=pagination.limit,
+        search=search,
+        status=status,
+        priority=priority,
+        category=category,
+        sort_by=sort_by
     )
 
 @router.post(
