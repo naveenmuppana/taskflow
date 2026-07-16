@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from app.models.task import Task
     from app.models.category import Category
     from app.models.tag import Tag
+    from app.models.project import Project
 
 class User(Base):
     __tablename__ = "users"
@@ -27,3 +28,4 @@ class User(Base):
     tasks: Mapped[list["Task"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     categories: Mapped[list["Category"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     tags: Mapped[list["Tag"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    projects: Mapped[list["Project"]] = relationship(back_populates="owner", cascade="all, delete-orphan")

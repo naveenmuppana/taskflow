@@ -27,6 +27,8 @@ from app.models.task import Task  # noqa
 from app.models.category import Category  # noqa
 from app.models.tag import Tag, task_tags  # noqa
 from app.models.subtask import Subtask  # noqa
+from app.models.project import Project  # noqa
+from app.models.time_entry import TimeEntry  # noqa
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

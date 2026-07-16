@@ -19,9 +19,10 @@ class TaskService:
         status: TaskStatus | None = None,
         priority: TaskPriority | None = None,
         category_id: int | None = None,
+        project_id: int | None = None,
         sort_by: str = "newest"
     ) -> list[Task]:
-        query = select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks)).where(Task.owner_id == owner_id)
+        query = select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks), selectinload(Task.project)).where(Task.owner_id == owner_id, Task.is_archived == False)
         
         if search:
             query = query.where(
@@ -36,6 +37,8 @@ class TaskService:
             query = query.where(Task.priority == priority)
         if category_id is not None:
             query = query.where(Task.category_id == category_id)
+        if project_id is not None:
+            query = query.where(Task.project_id == project_id)
             
         if sort_by == "oldest":
             query = query.order_by(asc(Task.created_at))
@@ -57,13 +60,14 @@ class TaskService:
     @staticmethod
     async def get_task_stats(db: AsyncSession, owner_id: int) -> TaskStatsResponse:
         # Get total tasks
-        total_query = select(func.count(Task.id)).where(Task.owner_id == owner_id)
+        total_query = select(func.count(Task.id)).where(Task.owner_id == owner_id, Task.is_archived == False)
         total_result = await db.execute(total_query)
         total = total_result.scalar() or 0
 
         # Get completed tasks
         completed_query = select(func.count(Task.id)).where(
             Task.owner_id == owner_id, 
+            Task.is_archived == False,
             Task.status == TaskStatus.COMPLETED
         )
         completed_result = await db.execute(completed_query)
@@ -72,6 +76,7 @@ class TaskService:
         # Get pending/in progress tasks
         pending_query = select(func.count(Task.id)).where(
             Task.owner_id == owner_id, 
+            Task.is_archived == False,
             Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS])
         )
         pending_result = await db.execute(pending_query)
@@ -80,6 +85,7 @@ class TaskService:
         # Get overdue tasks (status not completed and due_date < now)
         overdue_query = select(func.count(Task.id)).where(
             Task.owner_id == owner_id,
+            Task.is_archived == False,
             Task.status != TaskStatus.COMPLETED,
             Task.due_date < func.now()
         )
@@ -95,7 +101,7 @@ class TaskService:
 
     @staticmethod
     async def get_task_by_id(db: AsyncSession, task_id: int) -> Task | None:
-        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks)).where(Task.id == task_id))
+        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks), selectinload(Task.project)).where(Task.id == task_id, Task.is_archived == False))
         return result.scalars().first()
 
     @classmethod
@@ -118,6 +124,7 @@ class TaskService:
             priority=task_in.priority,
             due_date=task_in.due_date,
             category_id=task_in.category_id,
+            project_id=task_in.project_id,
             owner_id=owner_id
         )
         if task_in.tag_ids:
@@ -128,8 +135,8 @@ class TaskService:
         await db.commit()
         await db.refresh(db_task)
         
-        # Manually load the tags, category and subtasks if needed
-        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks)).where(Task.id == db_task.id))
+        # Manually load the tags, category, subtasks and project if needed
+        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks), selectinload(Task.project)).where(Task.id == db_task.id))
         return result.scalars().first()
 
     @classmethod

@@ -4,6 +4,7 @@ from app.models.task import TaskStatus, TaskPriority
 from app.schemas.category import CategoryResponse
 from app.schemas.tag import TagResponse
 from app.schemas.subtask import SubtaskResponse
+from app.schemas.project import ProjectResponse
 
 class TaskBase(BaseModel):
     title: str = Field(
@@ -38,6 +39,10 @@ class TaskBase(BaseModel):
     tag_ids: list[int] | None = Field(
         None,
         description="List of tag IDs associated with the task."
+    )
+    project_id: int | None = Field(
+        None,
+        description="Project ID of the task."
     )
 
 class TaskCreate(TaskBase):
@@ -75,6 +80,10 @@ class TaskUpdate(BaseModel):
         None,
         description="Updated list of tag IDs for the task."
     )
+    project_id: int | None = Field(
+        None,
+        description="Updated project ID of the task."
+    )
 
 class TaskResponse(TaskBase):
     id: int = Field(..., description="Unique identifier for the task.")
@@ -84,6 +93,7 @@ class TaskResponse(TaskBase):
     category: CategoryResponse | None = Field(None, description="The category object.")
     tags: list[TagResponse] = Field(default_factory=list, description="The list of tags.")
     subtasks: list[SubtaskResponse] = Field(default_factory=list, description="The list of subtasks.")
+    project: ProjectResponse | None = Field(None, description="The project object.")
 
     model_config = ConfigDict(from_attributes=True)
 
