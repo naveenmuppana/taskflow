@@ -42,6 +42,36 @@ body {
     border-bottom: 1px solid var(--card-border);
 }
 
+.header-title-search {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.search-bar {
+    width: 250px;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.filters, .sorting {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
 /* =========================================
    AUTHENTICATION PAGE (index.html)
    ========================================= */
@@ -267,6 +297,60 @@ body {
     font-size: 0.8rem;
 }
 
+/* Dashboard Stats */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    padding: 2rem 2rem 0;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.total-card .stat-icon { background: rgba(59, 130, 246, 0.15); }
+.pending-card .stat-icon { background: rgba(245, 158, 11, 0.15); }
+.completed-card .stat-icon { background: rgba(16, 185, 129, 0.15); }
+.overdue-card .stat-icon { background: rgba(239, 68, 68, 0.15); }
+
+.stat-info h3 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.25rem;
+}
+
+.stat-info p {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
 .tasks-scroll-area {
     flex: 1;
     overflow-y: auto;
@@ -343,6 +427,29 @@ body {
 .status-IN_PROGRESS { background: rgba(59, 130, 246, 0.2); color: var(--primary-color); }
 .status-COMPLETED { background: rgba(16, 185, 129, 0.2); color: var(--success-color); }
 .status-CANCELLED { background: rgba(239, 68, 68, 0.2); color: var(--danger-color); }
+
+.priority-low { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.priority-medium { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.priority-high { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.priority-critical { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); }
+
+.category-badge {
+    padding: 0.2rem 0.6rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.task-content.overdue {
+    border-left: 4px solid var(--danger-color);
+    padding-left: 1rem;
+}
+
+.overdue-text {
+    color: var(--danger-color);
+    font-weight: 500;
+}
 
 .task-actions {
     display: flex;
@@ -459,7 +566,16 @@ body {
     color: var(--text-secondary);
 }
 
-input, textarea {
+.input-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-row .input-group {
+    flex: 1;
+}
+
+input, textarea, select {
     width: 100%;
     padding: 0.75rem 1rem;
     background: rgba(0, 0, 0, 0.2);
@@ -470,7 +586,12 @@ input, textarea {
     transition: var(--transition);
 }
 
-input:focus, textarea:focus {
+select option {
+    background: var(--bg-color);
+    color: var(--text-primary);
+}
+
+input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--primary-color);
     background: rgba(0, 0, 0, 0.4);

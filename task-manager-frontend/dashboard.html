@@ -40,13 +40,71 @@
             
             <!-- Top Navbar -->
             <header class="top-nav glass-header">
-                <h2 id="current-view-title">All Tasks</h2>
+                <div class="header-title-search">
+                    <h2 id="current-view-title">All Tasks</h2>
+                    <input type="text" id="search-input" placeholder="Search tasks..." class="search-bar" oninput="debounceSearch()">
+                </div>
                 <div class="user-profile">
                     <span class="avatar">👤</span>
                     <span id="user-email">User</span>
                     <button class="btn-outline btn-sm" onclick="logout()">Logout</button>
                 </div>
             </header>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card total-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-info">
+                        <h3>Total Tasks</h3>
+                        <p id="stat-total">0</p>
+                    </div>
+                </div>
+                <div class="stat-card pending-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3>Pending</h3>
+                        <p id="stat-pending">0</p>
+                    </div>
+                </div>
+                <div class="stat-card completed-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>Completed</h3>
+                        <p id="stat-completed">0</p>
+                    </div>
+                </div>
+                <div class="stat-card overdue-card">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Overdue</h3>
+                        <p id="stat-overdue">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="filters">
+                    <select id="filter-priority" onchange="applyFilters()">
+                        <option value="">All Priorities</option>
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                    <input type="text" id="filter-category" placeholder="Filter category..." oninput="debounceSearch()">
+                </div>
+                <div class="sorting">
+                    <select id="sort-select" onchange="applyFilters()">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="due_date">Due Date</option>
+                        <option value="priority">Priority</option>
+                        <option value="alphabetically">A-Z</option>
+                    </select>
+                </div>
+            </div>
 
             <!-- Tasks Container -->
             <div class="tasks-scroll-area">
@@ -63,21 +121,41 @@
         </main>
     </div>
 
-    <!-- Create Task Modal -->
+    <!-- Create/Edit Task Modal -->
     <div id="task-modal" class="modal-overlay">
         <div class="glass-card modal-content">
             <div class="modal-header">
-                <h3>Create New Task</h3>
+                <h3 id="modal-title">Create New Task</h3>
                 <button class="btn-icon close-modal" onclick="closeModal()">✕</button>
             </div>
-            <form id="task-form" onsubmit="createTask(event)">
+            <form id="task-form" onsubmit="saveTask(event)">
+                <input type="hidden" id="task-id">
                 <div class="input-group">
                     <label for="task-title">Title</label>
                     <input type="text" id="task-title" required placeholder="What needs to be done?">
                 </div>
                 <div class="input-group">
                     <label for="task-desc">Description (Optional)</label>
-                    <textarea id="task-desc" placeholder="Add some details..." rows="4"></textarea>
+                    <textarea id="task-desc" placeholder="Add some details..." rows="3"></textarea>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="task-priority">Priority</label>
+                        <select id="task-priority">
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="CRITICAL">Critical</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="task-due-date">Due Date (Optional)</label>
+                        <input type="datetime-local" id="task-due-date">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="task-category">Category (Optional)</label>
+                    <input type="text" id="task-category" placeholder="e.g. Work, Personal">
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
