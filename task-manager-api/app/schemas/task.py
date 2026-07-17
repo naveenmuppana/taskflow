@@ -1,104 +1,43 @@
-from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
+from datetime import datetime
+from typing import Optional, List
 from app.models.task import TaskStatus, TaskPriority
+
+class TaskBase(BaseModel):
+    title: str = Field(..., title="Title", description="The title of the task", min_length=1, max_length=255, examples=["Buy groceries"])
+    description: Optional[str] = Field(None, title="Description", description="A detailed description of the task", max_length=1024, examples=["Milk, eggs, and bread"])
+    status: Optional[TaskStatus] = Field(default=TaskStatus.PENDING, title="Status", description="The current status of the task")
+    priority: Optional[TaskPriority] = Field(default=TaskPriority.MEDIUM, title="Priority", description="Urgency of the task")
+    due_date: Optional[datetime] = Field(None, title="Due Date", description="When the task needs to be completed")
+    category_id: Optional[int] = Field(None, title="Category ID", description="The category this task belongs to")
+    project_id: Optional[int] = Field(None, title="Project ID", description="The project this task belongs to")
+    is_archived: Optional[bool] = Field(default=False, title="Archived", description="Whether the task is archived")
+
+class TaskCreate(TaskBase):
+    tag_ids: Optional[List[int]] = Field(default=None, title="Tag IDs", description="List of tag IDs to associate with the task")
+
+class TaskUpdate(TaskBase):
+    tag_ids: Optional[List[int]] = Field(default=None, title="Tag IDs", description="List of tag IDs to associate with the task")
+
+class TaskInDBBase(TaskBase):
+    id: int = Field(..., title="ID", description="Unique identifier for the task", examples=[1])
+    owner_id: int = Field(..., title="Owner ID", description="ID of the user who owns this task", examples=[42])
+    created_at: datetime = Field(..., title="Created At", description="When the task was created")
+    updated_at: datetime = Field(..., title="Updated At", description="When the task was last updated")
+    
+    model_config = ConfigDict(from_attributes=True)
+
 from app.schemas.category import CategoryResponse
 from app.schemas.tag import TagResponse
 from app.schemas.subtask import SubtaskResponse
-from app.schemas.project import ProjectResponse
 
-class TaskBase(BaseModel):
-    title: str = Field(
-        ..., 
-        min_length=1, 
-        max_length=255,
-        description="The title of the task.",
-        examples=["Buy groceries"]
-    )
-    description: str | None = Field(
-        None, 
-        max_length=1024,
-        description="Detailed description of the task.",
-        examples=["Milk, Eggs, Bread"]
-    )
-    status: TaskStatus = Field(
-        default=TaskStatus.PENDING,
-        description="Current state of the task."
-    )
-    priority: TaskPriority = Field(
-        default=TaskPriority.MEDIUM,
-        description="Priority of the task."
-    )
-    due_date: datetime | None = Field(
-        None,
-        description="Optional due date for the task."
-    )
-    category_id: int | None = Field(
-        None,
-        description="Category ID of the task."
-    )
-    tag_ids: list[int] | None = Field(
-        None,
-        description="List of tag IDs associated with the task."
-    )
-    project_id: int | None = Field(
-        None,
-        description="Project ID of the task."
-    )
-
-class TaskCreate(TaskBase):
-    pass
-
-class TaskUpdate(BaseModel):
-    title: str | None = Field(
-        None, 
-        min_length=1, 
-        max_length=255,
-        description="New title for the task."
-    )
-    description: str | None = Field(
-        None, 
-        max_length=1024,
-        description="New detailed description."
-    )
-    status: TaskStatus | None = Field(
-        None,
-        description="Updated state of the task."
-    )
-    priority: TaskPriority | None = Field(
-        None,
-        description="Updated priority of the task."
-    )
-    due_date: datetime | None = Field(
-        None,
-        description="Updated due date of the task."
-    )
-    category_id: int | None = Field(
-        None,
-        description="Updated category ID of the task."
-    )
-    tag_ids: list[int] | None = Field(
-        None,
-        description="Updated list of tag IDs for the task."
-    )
-    project_id: int | None = Field(
-        None,
-        description="Updated project ID of the task."
-    )
-
-class TaskResponse(TaskBase):
-    id: int = Field(..., description="Unique identifier for the task.")
-    owner_id: int = Field(..., description="ID of the user who owns the task.")
-    created_at: datetime = Field(..., description="Creation timestamp.")
-    updated_at: datetime = Field(..., description="Last update timestamp.")
-    category: CategoryResponse | None = Field(None, description="The category object.")
-    tags: list[TagResponse] = Field(default_factory=list, description="The list of tags.")
-    subtasks: list[SubtaskResponse] = Field(default_factory=list, description="The list of subtasks.")
-    project: ProjectResponse | None = Field(None, description="The project object.")
-
-    model_config = ConfigDict(from_attributes=True)
+class TaskResponse(TaskInDBBase):
+    category: Optional[CategoryResponse] = None
+    tags: List[TagResponse] = []
+    subtasks: List[SubtaskResponse] = []
 
 class TaskStatsResponse(BaseModel):
-    total_tasks: int = Field(..., description="Total number of tasks")
-    completed_tasks: int = Field(..., description="Number of completed tasks")
-    pending_tasks: int = Field(..., description="Number of pending or in progress tasks")
-    overdue_tasks: int = Field(..., description="Number of overdue tasks")
+    total_tasks: int = Field(..., description="Total unarchived tasks")
+    completed_tasks: int = Field(..., description="Completed unarchived tasks")
+    pending_tasks: int = Field(..., description="Pending or in-progress tasks")
+    overdue_tasks: int = Field(..., description="Tasks past their due date that are not completed")

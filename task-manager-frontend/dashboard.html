@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dashboard-page">
+    <div class="animated-bg"></div>
 
     <div class="dashboard-layout">
         <!-- Sidebar Navigation -->
@@ -47,10 +48,14 @@
             
             <!-- Top Navbar -->
             <header class="top-nav glass-header">
-                <div class="header-title-search">
-                    <h2 id="current-view-title">All Tasks</h2>
-                    <input type="text" id="search-input" placeholder="Search tasks..." class="search-bar" oninput="debounceSearch()">
+                <h2 id="current-view-title">All Tasks</h2>
+                
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Search tasks..." oninput="handleSearch(event)">
                 </div>
+
                 <div class="user-profile">
                     <span class="avatar">👤</span>
                     <span id="user-email">User</span>
@@ -136,7 +141,7 @@
         <div class="glass-card modal-content">
             <div class="modal-header">
                 <h3 id="modal-title">Create New Task</h3>
-                <button class="btn-icon close-modal" onclick="closeModal()">✕</button>
+                <button class="btn-icon close-modal" onclick="closeModal('task-modal')">✕</button>
             </div>
             <form id="task-form" onsubmit="saveTask(event)">
                 <input type="hidden" id="task-id">
@@ -148,8 +153,8 @@
                     <label for="task-desc">Description (Optional)</label>
                     <textarea id="task-desc" placeholder="Add some details..." rows="3"></textarea>
                 </div>
-                <div class="input-row">
-                    <div class="input-group">
+                <div class="form-row">
+                    <div class="input-group half-width">
                         <label for="task-priority">Priority</label>
                         <select id="task-priority">
                             <option value="LOW">Low</option>
@@ -158,7 +163,7 @@
                             <option value="CRITICAL">Critical</option>
                         </select>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group half-width">
                         <label for="task-due-date">Due Date (Optional)</label>
                         <input type="datetime-local" id="task-due-date">
                     </div>

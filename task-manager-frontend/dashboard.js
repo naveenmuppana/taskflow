@@ -5,248 +5,383 @@ const token = localStorage.getItem('token');
 const userEmail = localStorage.getItem('userEmail');
 
 if (!token) {
-    // Kicked out if not logged in
     window.location.href = 'index.html';
 }
 
 let currentFilter = 'ALL';
+let currentSearchTerm = '';
 let tasks = [];
 let categories = [];
 let tags = [];
-let searchTimeout = null;
 
 // DOM Elements
 const tasksContainer = document.getElementById('tasks-container');
 const userEmailSpan = document.getElementById('user-email');
 const currentViewTitle = document.getElementById('current-view-title');
+
+// Create Modal Elements
 const taskModal = document.getElementById('task-modal');
-const modalTitle = document.getElementById('modal-title');
-const taskIdInput = document.getElementById('task-id');
 const taskTitleInput = document.getElementById('task-title');
 const taskDescInput = document.getElementById('task-desc');
 const taskPriorityInput = document.getElementById('task-priority');
 const taskDueDateInput = document.getElementById('task-due-date');
-const taskCategoryInput = document.getElementById('task-category');
-const taskTagsInput = document.getElementById('task-tags');
-
-// Filter/Sort DOM Elements
-const searchInput = document.getElementById('search-input');
-const filterPriority = document.getElementById('filter-priority');
-const filterCategory = document.getElementById('filter-category');
-const sortSelect = document.getElementById('sort-select');
+const taskCategorySelect = document.getElementById('task-category');
+const taskTagsSelect = document.getElementById('task-tags');
 
 // Initialization
 async function init() {
     userEmailSpan.textContent = userEmail || 'User';
-    await fetchCategories();
-    await fetchTags();
-    fetchTasks();
+    await Promise.all([
+        fetchCategories(),
+        fetchTags(),
+        fetchTasks()
+    ]);
 }
 
-// --- Navigation & Logout ---
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
     window.location.href = 'index.html';
 }
 
-// --- Toast Notifications ---
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
-    toast.style.borderLeft = `4px solid var(--${type}-color)`;
+    toast.style.borderLeft = `4px solid var(--${type})`;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// --- Modal Management (FAB) ---
-function openModal(taskId = null) {
-    if (taskId) {
-        modalTitle.textContent = 'Edit Task';
-        const task = tasks.find(t => t.id === taskId);
-        if (task) {
-            taskIdInput.value = task.id;
-            taskTitleInput.value = task.title;
-            taskDescInput.value = task.description || '';
-            taskPriorityInput.value = task.priority || 'MEDIUM';
-            // convert UTC ISO string to datetime-local format
-            taskDueDateInput.value = task.due_date ? new Date(task.due_date).toISOString().slice(0,16) : '';
-            taskCategoryInput.value = task.category ? task.category.id : '';
-            
-            // Set tags
-            const taskTagIds = task.tags ? task.tags.map(t => t.id) : [];
-            Array.from(taskTagsInput.options).forEach(opt => {
-                opt.selected = taskTagIds.includes(parseInt(opt.value));
-            });
-            
-            // Subtasks section
-            document.getElementById('subtasks-section').style.display = 'block';
-            renderSubtasksList(task.subtasks || [], task.id);
-        }
+// --- Modals ---
+function openModal() {
+    document.getElementById('task-id').value = '';
+    taskModal.classList.add('active');
+    document.getElementById('modal-title').textContent = 'Create New Task';
+    document.getElementById('subtasks-section').style.display = 'none';
+    taskTitleInput.focus();
+}
+
+function openEditModal(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    document.getElementById('task-id').value = task.id;
+    document.getElementById('modal-title').textContent = 'Edit Task';
+    
+    taskTitleInput.value = task.title;
+    taskDescInput.value = task.description || '';
+    taskPriorityInput.value = task.priority || 'MEDIUM';
+    
+    if (task.category_id) {
+        taskCategorySelect.value = task.category_id;
     } else {
-        modalTitle.textContent = 'Create New Task';
-        taskIdInput.value = '';
-        taskTitleInput.value = '';
-        taskDescInput.value = '';
-        taskPriorityInput.value = 'MEDIUM';
-        taskDueDateInput.value = '';
-        taskCategoryInput.value = '';
-        Array.from(taskTagsInput.options).forEach(opt => opt.selected = false);
-        document.getElementById('subtasks-section').style.display = 'none';
+        taskCategorySelect.value = '';
     }
+    
+    // Set tags
+    const tagIds = (task.tags || []).map(t => t.id.toString());
+    Array.from(taskTagsSelect.options).forEach(opt => {
+        opt.selected = tagIds.includes(opt.value);
+    });
+
+    if (task.due_date) {
+        const dt = new Date(task.due_date);
+        dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+        taskDueDateInput.value = dt.toISOString().slice(0, 16);
+    } else {
+        taskDueDateInput.value = '';
+    }
+
+    // Subtasks
+    document.getElementById('subtasks-section').style.display = 'block';
+    renderSubtasks(task);
+
     taskModal.classList.add('active');
     taskTitleInput.focus();
 }
 
-function closeModal() {
-    taskModal.classList.remove('active');
+function closeModal(modalId = 'task-modal') {
+    const modal = document.getElementById(modalId);
+    if(modal) modal.classList.remove('active');
+    
+    if (modalId === 'task-modal') {
+        document.getElementById('task-id').value = '';
+        taskTitleInput.value = '';
+        taskDescInput.value = '';
+        taskDueDateInput.value = '';
+        taskPriorityInput.value = 'MEDIUM';
+        taskCategorySelect.value = '';
+        Array.from(taskTagsSelect.options).forEach(opt => opt.selected = false);
+    }
 }
 
-// Close modal if clicked outside
-taskModal.addEventListener('click', (e) => {
-    if (e.target === taskModal) {
-        closeModal();
-    }
+document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.addEventListener('mousedown', (e) => {
+        if (e.target === modal) closeModal(modal.id);
+    });
 });
 
-const categoryModal = document.getElementById('category-modal');
-function openCategoryModal() {
-    categoryModal.classList.add('active');
+// --- Search & Filter ---
+function handleSearch(e) {
+    currentSearchTerm = e.target.value.toLowerCase();
+    renderTasks();
 }
 
-function closeCategoryModal() {
-    categoryModal.classList.remove('active');
-}
+function filterTasks(status) {
+    currentFilter = status;
+    document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    
+    if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
+    else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
+    else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
+    else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
 
-categoryModal.addEventListener('click', (e) => {
-    if (e.target === categoryModal) {
-        closeCategoryModal();
-    }
-});
-
-const tagModal = document.getElementById('tag-modal');
-function openTagModal() {
-    tagModal.classList.add('active');
-}
-function closeTagModal() {
-    tagModal.classList.remove('active');
-}
-tagModal.addEventListener('click', (e) => {
-    if (e.target === tagModal) {
-        closeTagModal();
-    }
-});
-
-// --- Debounce Search ---
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        fetchTasks();
-    }, 300);
+    renderTasks();
 }
 
 function applyFilters() {
-    fetchTasks();
+    renderTasks();
 }
 
-// --- Tasks API Operations ---
-async function fetchTasks(updateModal = false) {
+// --- Categories ---
+async function fetchCategories() {
     try {
-        // Always refresh stats when tasks change
-        fetchStats();
+        const res = await fetch(`${API_URL}/categories/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        categories = await res.json();
+        
+        // Populate modal selects
+        let optionsHtml = '<option value="">None</option>';
+        categories.forEach(c => {
+            optionsHtml += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+        });
+        taskCategorySelect.innerHTML = optionsHtml;
+        
+        // Populate filter
+        let filterHtml = '<option value="">All Categories</option>';
+        categories.forEach(c => {
+            filterHtml += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+        });
+        document.getElementById('filter-category').innerHTML = filterHtml;
+        
+        // Populate manage modal
+        const list = document.getElementById('categories-list');
+        list.innerHTML = categories.map(c => `
+            <li>
+                <div><span class="item-color-indicator" style="background:${c.color}"></span> ${escapeHtml(c.name)}</div>
+                <button class="btn-icon delete" onclick="deleteCategory(${c.id})" title="Delete">✕</button>
+            </li>
+        `).join('');
+    } catch (err) {
+        console.error('Failed to load categories', err);
+    }
+}
 
-        const queryParams = new URLSearchParams();
-        
-        const searchVal = searchInput.value.trim();
-        if (searchVal) queryParams.append('search', searchVal);
-        
-        if (currentFilter !== 'ALL') queryParams.append('status', currentFilter);
-        
-        const priorityVal = filterPriority.value;
-        if (priorityVal) queryParams.append('priority', priorityVal);
-        
-        const categoryVal = filterCategory.value;
-        if (categoryVal) queryParams.append('category_id', categoryVal);
-        
-        const sortVal = sortSelect.value;
-        if (sortVal) queryParams.append('sort_by', sortVal);
+function openCategoryModal() {
+    document.getElementById('category-modal').classList.add('active');
+}
 
-        const res = await fetch(`${API_URL}/tasks/?${queryParams.toString()}`, {
+function closeCategoryModal() {
+    document.getElementById('category-modal').classList.remove('active');
+}
+
+async function saveCategory(e) {
+    e.preventDefault();
+    const name = document.getElementById('new-category-name').value;
+    const color = document.getElementById('new-category-color').value;
+    
+    try {
+        const res = await fetch(`${API_URL}/categories/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, color })
+        });
+        if (res.ok) {
+            document.getElementById('new-category-name').value = '';
+            showToast('Category created');
+            fetchCategories();
+        }
+    } catch (err) {
+        showToast('Error saving category', 'danger');
+    }
+}
+
+async function deleteCategory(id) {
+    if (!confirm('Delete this category?')) return;
+    try {
+        const res = await fetch(`${API_URL}/categories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            showToast('Category deleted');
+            fetchCategories();
+            fetchTasks(); // refresh tasks since category might be removed
+        }
+    } catch (err) {
+        showToast('Error deleting category', 'danger');
+    }
+}
+
+// --- Tags ---
+async function fetchTags() {
+    try {
+        const res = await fetch(`${API_URL}/tags/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        tags = await res.json();
+        
+        // Populate modal selects
+        let optionsHtml = '';
+        tags.forEach(t => {
+            optionsHtml += `<option value="${t.id}">${escapeHtml(t.name)}</option>`;
+        });
+        taskTagsSelect.innerHTML = optionsHtml;
+        
+        // Populate manage modal
+        const list = document.getElementById('tags-list');
+        list.innerHTML = tags.map(t => `
+            <li>
+                <div><span class="item-color-indicator" style="background:${t.color}"></span> ${escapeHtml(t.name)}</div>
+                <button class="btn-icon delete" onclick="deleteTag(${t.id})" title="Delete">✕</button>
+            </li>
+        `).join('');
+    } catch (err) {
+        console.error('Failed to load tags', err);
+    }
+}
+
+function openTagModal() {
+    document.getElementById('tag-modal').classList.add('active');
+}
+
+function closeTagModal() {
+    document.getElementById('tag-modal').classList.remove('active');
+}
+
+async function saveTag(e) {
+    e.preventDefault();
+    const name = document.getElementById('new-tag-name').value;
+    const color = document.getElementById('new-tag-color').value;
+    
+    try {
+        const res = await fetch(`${API_URL}/tags/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, color })
+        });
+        if (res.ok) {
+            document.getElementById('new-tag-name').value = '';
+            showToast('Tag created');
+            fetchTags();
+        }
+    } catch (err) {
+        showToast('Error saving tag', 'danger');
+    }
+}
+
+async function deleteTag(id) {
+    if (!confirm('Delete this tag?')) return;
+    try {
+        const res = await fetch(`${API_URL}/tags/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            showToast('Tag deleted');
+            fetchTags();
+            fetchTasks(); // refresh tasks
+        }
+    } catch (err) {
+        showToast('Error deleting tag', 'danger');
+    }
+}
+
+
+// --- API Calls ---
+async function fetchTasks() {
+    try {
+        const res = await fetch(`${API_URL}/tasks/`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (res.status === 401) return logout(); // Token expired
+        if (res.status === 401) return logout();
         
         tasks = await res.json();
-        renderTasks();
+        
+        // Stats update
+        const total = tasks.length;
+        const pending = tasks.filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS').length;
+        const completed = tasks.filter(t => t.status === 'COMPLETED').length;
+        const overdue = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'COMPLETED').length;
+        
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-pending').textContent = pending;
+        document.getElementById('stat-completed').textContent = completed;
+        document.getElementById('stat-overdue').textContent = overdue;
 
-        if (updateModal) {
-            const currentTaskId = document.getElementById('task-id').value;
-            if (currentTaskId) {
-                const currentTask = tasks.find(t => t.id === parseInt(currentTaskId));
-                if (currentTask) {
-                    renderSubtasksList(currentTask.subtasks || [], currentTask.id);
-                }
-            }
-        }
+        renderTasks();
     } catch (err) {
         showToast('Failed to load tasks', 'danger');
     }
 }
 
-async function fetchStats() {
-    try {
-        const res = await fetch(`${API_URL}/tasks/stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.ok) {
-            const stats = await res.json();
-            document.getElementById('stat-total').textContent = stats.total_tasks;
-            document.getElementById('stat-pending').textContent = stats.pending_tasks;
-            document.getElementById('stat-completed').textContent = stats.completed_tasks;
-            document.getElementById('stat-overdue').textContent = stats.overdue_tasks;
-        }
-    } catch (err) {
-        console.error('Failed to load stats', err);
-    }
-}
-
 async function saveTask(e) {
     e.preventDefault();
-    const id = taskIdInput.value;
     
-    const selectedTags = Array.from(taskTagsInput.selectedOptions).map(opt => parseInt(opt.value));
+    const id = document.getElementById('task-id').value;
     
     const payload = {
         title: taskTitleInput.value,
         description: taskDescInput.value || null,
         priority: taskPriorityInput.value,
-        due_date: taskDueDateInput.value ? new Date(taskDueDateInput.value).toISOString() : null,
-        category_id: taskCategoryInput.value ? parseInt(taskCategoryInput.value) : null,
-        tag_ids: selectedTags
     };
 
-    try {
-        const url = id ? `${API_URL}/tasks/${id}` : `${API_URL}/tasks/`;
-        const method = id ? 'PUT' : 'POST';
-        
-        // If creating, ensure status is PENDING by default
-        if (!id) payload.status = 'PENDING';
+    if (taskDueDateInput.value) {
+        payload.due_date = new Date(taskDueDateInput.value).toISOString();
+    } else {
+        payload.due_date = null;
+    }
+    
+    if (taskCategorySelect.value) {
+        payload.category_id = parseInt(taskCategorySelect.value);
+    } else {
+        payload.category_id = null;
+    }
 
-        const res = await fetch(url, {
-            method: method,
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+    const selectedTags = Array.from(taskTagsSelect.selectedOptions).map(opt => parseInt(opt.value));
+    if (selectedTags.length > 0) {
+        payload.tag_ids = selectedTags;
+    } else {
+        payload.tag_ids = [];
+    }
+
+    try {
+        let res;
+        if (id) {
+            // Update
+            const task = tasks.find(t => t.id == id);
+            payload.status = task.status; // preserve status
+            res = await fetch(`${API_URL}/tasks/${id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            // Create
+            res = await fetch(`${API_URL}/tasks/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
 
         if (res.ok) {
-            closeModal();
+            closeModal('task-modal');
             showToast(id ? 'Task updated!' : 'Task created!');
-            fetchTasks(); // Refresh list
+            fetchTasks();
         } else {
             const data = await res.json();
             showToast(Array.isArray(data.detail) ? data.detail[0].msg : data.detail, 'danger');
@@ -256,41 +391,38 @@ async function saveTask(e) {
     }
 }
 
+
 async function updateTaskStatus(id, newStatus) {
     try {
         const task = tasks.find(t => t.id === id);
+        const payload = {
+            title: task.title,
+            description: task.description,
+            status: newStatus,
+            priority: task.priority,
+            due_date: task.due_date,
+            category_id: task.category_id,
+            tag_ids: (task.tags || []).map(t => t.id)
+        };
         const res = await fetch(`${API_URL}/tasks/${id}`, {
             method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                title: task.title,
-                description: task.description,
-                status: newStatus,
-                priority: task.priority,
-                due_date: task.due_date,
-                category_id: task.category ? task.category.id : null,
-                tag_ids: task.tags ? task.tags.map(t => t.id) : []
-            })
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
         if (res.ok) fetchTasks();
     } catch (err) {
-        showToast('Failed to update task', 'danger');
+        showToast('Failed to update task status', 'danger');
     }
 }
 
 async function deleteTask(id) {
     if (!confirm('Are you sure you want to delete this task?')) return;
-    
     try {
         const res = await fetch(`${API_URL}/tasks/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-
         if (res.ok) {
             showToast('Task deleted');
             fetchTasks();
@@ -300,86 +432,181 @@ async function deleteTask(id) {
     }
 }
 
-// --- UI Rendering ---
-function filterTasksByStatus(status, element) {
-    currentFilter = status;
+// --- Subtasks ---
+function renderSubtasks(task) {
+    const list = document.getElementById('subtasks-list');
+    const subtasks = task.subtasks || [];
     
-    // Update active nav button
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
-    
-    // Update Header Title
-    if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
-    else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
-    else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
-    else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
-
-    fetchTasks();
-}
-// For backward compat with HTML onclicks
-window.filterTasks = function(status) {
-    filterTasksByStatus(status, event.currentTarget);
+    list.innerHTML = subtasks.map(st => `
+        <div class="subtask-item ${st.is_completed ? 'completed' : ''}">
+            <input type="checkbox" ${st.is_completed ? 'checked' : ''} onchange="toggleSubtask(${st.id}, ${!st.is_completed})">
+            <span>${escapeHtml(st.title)}</span>
+            <button type="button" class="btn-icon delete" style="width:24px;height:24px" onclick="deleteSubtask(${st.id})">✕</button>
+        </div>
+    `).join('');
 }
 
+async function addSubtask() {
+    const titleInput = document.getElementById('new-subtask-title');
+    const title = titleInput.value.trim();
+    const taskId = document.getElementById('task-id').value;
+    
+    if (!title || !taskId) return;
+    
+    try {
+        const res = await fetch(`${API_URL}/subtasks/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, task_id: parseInt(taskId) })
+        });
+        if (res.ok) {
+            titleInput.value = '';
+            await fetchTasks();
+            renderSubtasks(tasks.find(t => t.id == taskId));
+        }
+    } catch (err) {
+        showToast('Failed to add subtask', 'danger');
+    }
+}
+
+async function toggleSubtask(subtaskId, isCompleted) {
+    const taskId = document.getElementById('task-id').value;
+    try {
+        const res = await fetch(`${API_URL}/subtasks/${subtaskId}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_completed: isCompleted })
+        });
+        if (res.ok) {
+            await fetchTasks();
+            renderSubtasks(tasks.find(t => t.id == taskId));
+        }
+    } catch (err) {
+        showToast('Failed to update subtask', 'danger');
+    }
+}
+
+async function deleteSubtask(subtaskId) {
+    const taskId = document.getElementById('task-id').value;
+    try {
+        const res = await fetch(`${API_URL}/subtasks/${subtaskId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            await fetchTasks();
+            renderSubtasks(tasks.find(t => t.id == taskId));
+        }
+    } catch (err) {
+        showToast('Failed to delete subtask', 'danger');
+    }
+}
+
+// --- Render Logic ---
 function renderTasks() {
     tasksContainer.innerHTML = '';
     
-    if (tasks.length === 0) {
+    let filteredTasks = tasks;
+    
+    // Tab Filter
+    if (currentFilter !== 'ALL') {
+        filteredTasks = filteredTasks.filter(t => t.status === currentFilter);
+    }
+    
+    // Search
+    if (currentSearchTerm) {
+        filteredTasks = filteredTasks.filter(t => 
+            t.title.toLowerCase().includes(currentSearchTerm) || 
+            (t.description && t.description.toLowerCase().includes(currentSearchTerm))
+        );
+    }
+    
+    // Toolbar Filters
+    const priorityFilter = document.getElementById('filter-priority').value;
+    const categoryFilter = document.getElementById('filter-category').value;
+    
+    if (priorityFilter) {
+        filteredTasks = filteredTasks.filter(t => t.priority === priorityFilter);
+    }
+    if (categoryFilter) {
+        filteredTasks = filteredTasks.filter(t => t.category_id == categoryFilter);
+    }
+    
+    // Sorting
+    const sortVal = document.getElementById('sort-select').value;
+    filteredTasks.sort((a, b) => {
+        if (sortVal === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+        if (sortVal === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+        if (sortVal === 'due_date') {
+            if (!a.due_date) return 1;
+            if (!b.due_date) return -1;
+            return new Date(a.due_date) - new Date(b.due_date);
+        }
+        if (sortVal === 'alphabetically') return a.title.localeCompare(b.title);
+        // Priority
+        const pMap = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        if (sortVal === 'priority') return (pMap[b.priority] || 0) - (pMap[a.priority] || 0);
+        return 0;
+    });
+
+    if (filteredTasks.length === 0) {
         tasksContainer.innerHTML = `
             <div class="empty-state">
-                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📭</div>
-                <h3>No tasks found</h3>
-                <p>Click the + button in the corner to create one.</p>
+                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">${currentSearchTerm ? '🔍' : '📭'}</div>
+                <h3>${currentSearchTerm ? 'No tasks match your search' : 'No tasks found'}</h3>
+                <p>${currentSearchTerm ? 'Try adjusting your keywords.' : 'Click the + button in the corner to create one.'}</p>
             </div>
         `;
         return;
     }
 
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
         const div = document.createElement('div');
         div.className = 'task-item';
         
         const nextStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
         const icon = task.status === 'COMPLETED' ? '↺' : '✓';
-        const opacityStyle = task.status === 'COMPLETED' ? 'opacity: 0.6;' : '';
+        const opacityStyle = task.status === 'COMPLETED' ? 'opacity: 0.5;' : '';
         const lineStyle = task.status === 'COMPLETED' ? 'text-decoration: line-through;' : '';
         
-        let overdueClass = '';
-        if (task.due_date && task.status !== 'COMPLETED') {
+        let dueDateHtml = '';
+        if (task.due_date) {
             const dueDate = new Date(task.due_date);
-            if (dueDate < new Date()) {
-                overdueClass = 'overdue';
-            }
+            const isOverdue = dueDate < new Date() && task.status !== 'COMPLETED';
+            dueDateHtml = `<span class="due-date ${isOverdue ? 'overdue' : ''}">📅 ${dueDate.toLocaleDateString()}</span>`;
+        }
+        
+        let categoryHtml = '';
+        if (task.category) {
+            categoryHtml = `<span class="badge task-category" style="border-color:${task.category.color}; color:${task.category.color}">${escapeHtml(task.category.name)}</span>`;
+        }
+        
+        let tagsHtml = '';
+        if (task.tags && task.tags.length > 0) {
+            tagsHtml = task.tags.map(t => `<span class="badge task-tag" style="border-color:${t.color}; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ');
         }
 
-        const dueDateDisplay = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date';
-        
         div.innerHTML = `
-            <div class="task-content ${overdueClass}" style="${opacityStyle}" onclick="openModal(${task.id})">
+            <div class="task-content" style="${opacityStyle}">
                 <div class="task-title" style="${lineStyle}">${escapeHtml(task.title)}</div>
                 ${task.description ? `<div class="task-desc">${escapeHtml(task.description)}</div>` : ''}
-                <div class="task-meta">
-                    <span class="status-badge status-${task.status}">${task.status.replace('_', ' ')}</span>
-                    <span class="status-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
-                    ${task.category ? `<span class="category-badge" style="background-color: ${task.category.color}20; color: ${task.category.color}; border: 1px solid ${task.category.color}; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${escapeHtml(task.category.name)}</span>` : ''}
-                    ${task.tags && task.tags.length > 0 ? task.tags.map(t => `<span class="tag-badge" style="background-color: ${t.color}20; color: ${t.color}; border: 1px solid ${t.color}; padding: 0.1rem 0.4rem; border-radius: 12px; font-size: 0.7rem;">#${escapeHtml(t.name)}</span>`).join(' ') : ''}
-                    <span class="${overdueClass ? 'overdue-text' : ''}">Due: ${dueDateDisplay}</span>
+                
+                <div class="badges-container">
+                    <span class="badge status-${task.status}">${task.status.replace('_', ' ')}</span>
+                    <span class="badge priority-${task.priority}">Priority: ${task.priority}</span>
+                    ${categoryHtml}
+                    ${tagsHtml}
                 </div>
-                ${task.subtasks && task.subtasks.length > 0 ? `
-                <div class="task-subtasks" style="margin-top: 10px; font-size: 0.85rem;">
-                    <strong>Subtasks:</strong>
-                    <ul style="list-style: none; padding-left: 0; margin: 4px 0 0 0;">
-                        ${task.subtasks.map(st => `
-                            <li style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; ${st.is_completed ? 'opacity: 0.6;' : ''}">
-                                <input type="checkbox" ${st.is_completed ? 'checked' : ''} onclick="toggleSubtaskStatus(${st.id}, ${task.id}, ${!st.is_completed})">
-                                <span style="${st.is_completed ? 'text-decoration: line-through;' : ''}">${escapeHtml(st.title)}</span>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>` : ''}
+                
+                <div class="task-meta">
+                    ${dueDateHtml}
+                    <span>Created: ${new Date(task.created_at).toLocaleDateString()}</span>
+                    ${task.subtasks && task.subtasks.length > 0 ? `<span>📋 ${task.subtasks.filter(s=>s.is_completed).length}/${task.subtasks.length} Subtasks</span>` : ''}
+                </div>
             </div>
             <div class="task-actions">
                 <button class="btn-icon" onclick="updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
+                <button class="btn-icon" onclick="openEditModal(${task.id})" title="Edit Task">✎</button>
                 <button class="btn-icon delete" onclick="deleteTask(${task.id})" title="Delete Task">✕</button>
             </div>
         `;
@@ -397,274 +624,4 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
-// --- Category API Operations ---
-async function fetchCategories() {
-    try {
-        const res = await fetch(`${API_URL}/categories/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            categories = await res.json();
-            renderCategories();
-        }
-    } catch (err) {
-        console.error('Failed to load categories', err);
-    }
-}
-
-async function saveCategory(e) {
-    e.preventDefault();
-    const name = document.getElementById('new-category-name').value;
-    const color = document.getElementById('new-category-color').value;
-
-    try {
-        const res = await fetch(`${API_URL}/categories/`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, color })
-        });
-
-        if (res.ok) {
-            document.getElementById('new-category-name').value = '';
-            fetchCategories();
-            showToast('Category created!');
-        } else {
-            const data = await res.json();
-            showToast(data.detail, 'danger');
-        }
-    } catch (err) {
-        showToast('Failed to create category', 'danger');
-    }
-}
-
-async function deleteCategory(id) {
-    if (!confirm('Are you sure you want to delete this category? All tasks in this category will lose it.')) return;
-    try {
-        const res = await fetch(`${API_URL}/categories/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            fetchCategories();
-            fetchTasks(); // refresh tasks since category was deleted
-            showToast('Category deleted');
-        }
-    } catch (err) {
-        showToast('Failed to delete category', 'danger');
-    }
-}
-
-function renderCategories() {
-    // Render list in modal
-    const list = document.getElementById('categories-list');
-    list.innerHTML = '';
-    
-    // Render in Task Select
-    const taskSelect = document.getElementById('task-category');
-    taskSelect.innerHTML = '<option value="">None</option>';
-    
-    // Render in Filter Select
-    const filterSelect = document.getElementById('filter-category');
-    filterSelect.innerHTML = '<option value="">All Categories</option>';
-
-    categories.forEach(cat => {
-        // Modal List
-        const li = document.createElement('li');
-        li.style.display = 'flex';
-        li.style.alignItems = 'center';
-        li.style.justifyContent = 'space-between';
-        li.style.padding = '8px';
-        li.style.borderBottom = '1px solid var(--border-color)';
-        li.innerHTML = `
-            <div style="display: flex; alignItems: center; gap: 8px;">
-                <div style="width: 16px; height: 16px; border-radius: 50%; background-color: ${cat.color}"></div>
-                <span>${escapeHtml(cat.name)}</span>
-            </div>
-            <button class="btn-icon delete" onclick="deleteCategory(${cat.id})">✕</button>
-        `;
-        list.appendChild(li);
-
-        // Task Select
-        taskSelect.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`;
-        
-        // Filter Select
-        filterSelect.innerHTML += `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`;
-    });
-}
-
-// --- Tag API Operations ---
-async function fetchTags() {
-    try {
-        const res = await fetch(`${API_URL}/tags/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            tags = await res.json();
-            renderTags();
-        }
-    } catch (err) {
-        console.error('Failed to load tags', err);
-    }
-}
-
-async function saveTag(e) {
-    e.preventDefault();
-    const name = document.getElementById('new-tag-name').value;
-    const color = document.getElementById('new-tag-color').value;
-
-    try {
-        const res = await fetch(`${API_URL}/tags/`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name, color })
-        });
-
-        if (res.ok) {
-            document.getElementById('new-tag-name').value = '';
-            fetchTags();
-            showToast('Tag created!');
-        } else {
-            const data = await res.json();
-            showToast(data.detail, 'danger');
-        }
-    } catch (err) {
-        showToast('Failed to create tag', 'danger');
-    }
-}
-
-async function deleteTag(id) {
-    if (!confirm('Are you sure you want to delete this tag? It will be removed from all tasks.')) return;
-    try {
-        const res = await fetch(`${API_URL}/tags/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            fetchTags();
-            fetchTasks(); 
-            showToast('Tag deleted');
-        }
-    } catch (err) {
-        showToast('Failed to delete tag', 'danger');
-    }
-}
-
-function renderTags() {
-    const list = document.getElementById('tags-list');
-    list.innerHTML = '';
-    
-    const taskTags = document.getElementById('task-tags');
-    taskTags.innerHTML = '';
-
-    tags.forEach(t => {
-        // Modal List
-        const li = document.createElement('li');
-        li.style.display = 'flex';
-        li.style.alignItems = 'center';
-        li.style.justifyContent = 'space-between';
-        li.style.padding = '8px';
-        li.style.borderBottom = '1px solid var(--border-color)';
-        li.innerHTML = `
-            <div style="display: flex; alignItems: center; gap: 8px;">
-                <div style="width: 16px; height: 16px; border-radius: 4px; background-color: ${t.color}"></div>
-                <span>#${escapeHtml(t.name)}</span>
-            </div>
-            <button class="btn-icon delete" onclick="deleteTag(${t.id})">✕</button>
-        `;
-        list.appendChild(li);
-
-        // Task Select
-        taskTags.innerHTML += `<option value="${t.id}">${escapeHtml(t.name)}</option>`;
-    });
-}
-
-// --- Subtask API Operations ---
-function renderSubtasksList(subtasks, taskId) {
-    const list = document.getElementById('subtasks-list');
-    list.innerHTML = '';
-    subtasks.forEach(st => {
-        const div = document.createElement('div');
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.justifyContent = 'space-between';
-        div.style.padding = '4px 0';
-        div.style.borderBottom = '1px solid var(--border-color)';
-        
-        div.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" ${st.is_completed ? 'checked' : ''} onchange="toggleSubtaskStatus(${st.id}, ${taskId}, this.checked)">
-                <span style="${st.is_completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${escapeHtml(st.title)}</span>
-            </div>
-            <button type="button" class="btn-icon delete" onclick="deleteSubtask(${st.id}, ${taskId})" style="width: 20px; height: 20px; font-size: 10px;">✕</button>
-        `;
-        list.appendChild(div);
-    });
-}
-
-async function addSubtask() {
-    const taskId = document.getElementById('task-id').value;
-    const titleInput = document.getElementById('new-subtask-title');
-    const title = titleInput.value.trim();
-    if (!taskId || !title) return;
-
-    try {
-        const res = await fetch(`${API_URL}/subtasks/`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ task_id: parseInt(taskId), title: title, is_completed: false })
-        });
-        if (res.ok) {
-            titleInput.value = '';
-            fetchTasks(true); // Refetch tasks to update state, true flag to re-render modal
-        } else {
-            showToast('Failed to add subtask', 'danger');
-        }
-    } catch (err) {
-        showToast('Error adding subtask', 'danger');
-    }
-}
-
-async function toggleSubtaskStatus(subtaskId, taskId, isCompleted) {
-    try {
-        const res = await fetch(`${API_URL}/subtasks/${subtaskId}`, {
-            method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ is_completed: isCompleted })
-        });
-        if (res.ok) {
-            fetchTasks(true); 
-        }
-    } catch (err) {
-        showToast('Error updating subtask', 'danger');
-    }
-}
-
-async function deleteSubtask(subtaskId, taskId) {
-    if (!confirm('Delete subtask?')) return;
-    try {
-        const res = await fetch(`${API_URL}/subtasks/${subtaskId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            fetchTasks(true);
-        }
-    } catch (err) {
-        showToast('Error deleting subtask', 'danger');
-    }
-}
-
-// Start app
 init();
