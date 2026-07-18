@@ -9,6 +9,7 @@ class TaskBase(BaseModel):
     status: Optional[TaskStatus] = Field(default=TaskStatus.PENDING, title="Status", description="The current status of the task")
     priority: Optional[TaskPriority] = Field(default=TaskPriority.MEDIUM, title="Priority", description="Urgency of the task")
     due_date: Optional[datetime] = Field(None, title="Due Date", description="When the task needs to be completed")
+    remind_at: Optional[datetime] = Field(None, title="Remind At", description="When the user should be reminded of the task")
     category_id: Optional[int] = Field(None, title="Category ID", description="The category this task belongs to")
     project_id: Optional[int] = Field(None, title="Project ID", description="The project this task belongs to")
     is_archived: Optional[bool] = Field(default=False, title="Archived", description="Whether the task is archived")

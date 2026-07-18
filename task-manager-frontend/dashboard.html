@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 </head>
 <body class="dashboard-page">
     <div class="animated-bg"></div>
@@ -32,6 +33,9 @@
                 </button>
                 <button class="nav-btn" data-filter="COMPLETED" onclick="filterTasks('COMPLETED')">
                     <span class="icon">●</span> Completed
+                </button>
+                <button class="nav-btn" data-filter="CALENDAR" onclick="toggleCalendarView()">
+                    <span class="icon">📅</span> Calendar
                 </button>
                 <div class="nav-divider"></div>
                 <button class="nav-btn" onclick="openCategoryModal()">
@@ -122,10 +126,11 @@
             </div>
 
             <!-- Tasks Container -->
-            <div class="tasks-scroll-area">
+            <div class="tasks-scroll-area" id="main-scroll-area">
                 <div id="tasks-container">
                     <!-- Tasks injected by JS -->
                 </div>
+                <div id="calendar-container" style="display: none; height: 100%; min-height: 500px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px;"></div>
             </div>
 
             <!-- Floating Action Button (FAB) -->
@@ -154,7 +159,7 @@
                     <textarea id="task-desc" placeholder="Add some details..." rows="3"></textarea>
                 </div>
                 <div class="form-row">
-                    <div class="input-group half-width">
+                    <div class="input-group third-width">
                         <label for="task-priority">Priority</label>
                         <select id="task-priority">
                             <option value="LOW">Low</option>
@@ -163,9 +168,13 @@
                             <option value="CRITICAL">Critical</option>
                         </select>
                     </div>
-                    <div class="input-group half-width">
+                    <div class="input-group third-width">
                         <label for="task-due-date">Due Date (Optional)</label>
                         <input type="datetime-local" id="task-due-date">
+                    </div>
+                    <div class="input-group third-width">
+                        <label for="task-remind-at">Remind At (Optional)</label>
+                        <input type="datetime-local" id="task-remind-at">
                     </div>
                 </div>
                 <div class="input-row">
@@ -262,6 +271,18 @@
 
     <!-- Notification Toast -->
     <div id="toast" class="toast"></div>
+
+    <!-- Focus Mode Modal -->
+    <div id="focus-modal" class="modal-overlay focus-overlay">
+        <div class="focus-content">
+            <h2 id="focus-task-title">Task Title</h2>
+            <div class="timer-display" id="focus-timer">25:00</div>
+            <div class="focus-controls">
+                <button class="btn-icon focus-btn" id="focus-play-btn" onclick="toggleFocusTimer()">▶</button>
+                <button class="btn-icon focus-btn stop" onclick="closeFocusMode()">⏹</button>
+            </div>
+        </div>
+    </div>
 
     <script src="dashboard.js"></script>
 </body>

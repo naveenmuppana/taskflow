@@ -25,6 +25,7 @@ const taskTitleInput = document.getElementById('task-title');
 const taskDescInput = document.getElementById('task-desc');
 const taskPriorityInput = document.getElementById('task-priority');
 const taskDueDateInput = document.getElementById('task-due-date');
+const taskRemindAtInput = document.getElementById('task-remind-at');
 const taskCategorySelect = document.getElementById('task-category');
 const taskTagsSelect = document.getElementById('task-tags');
 
@@ -92,6 +93,14 @@ function openEditModal(id) {
         taskDueDateInput.value = '';
     }
 
+    if (task.remind_at) {
+        const rt = new Date(task.remind_at);
+        rt.setMinutes(rt.getMinutes() - rt.getTimezoneOffset());
+        taskRemindAtInput.value = rt.toISOString().slice(0, 16);
+    } else {
+        taskRemindAtInput.value = '';
+    }
+
     // Subtasks
     document.getElementById('subtasks-section').style.display = 'block';
     renderSubtasks(task);
@@ -109,6 +118,7 @@ function closeModal(modalId = 'task-modal') {
         taskTitleInput.value = '';
         taskDescInput.value = '';
         taskDueDateInput.value = '';
+        taskRemindAtInput.value = '';
         taskPriorityInput.value = 'MEDIUM';
         taskCategorySelect.value = '';
         Array.from(taskTagsSelect.options).forEach(opt => opt.selected = false);
@@ -344,6 +354,12 @@ async function saveTask(e) {
     } else {
         payload.due_date = null;
     }
+
+    if (taskRemindAtInput.value) {
+        payload.remind_at = new Date(taskRemindAtInput.value).toISOString();
+    } else {
+        payload.remind_at = null;
+    }
     
     if (taskCategorySelect.value) {
         payload.category_id = parseInt(taskCategorySelect.value);
@@ -401,6 +417,7 @@ async function updateTaskStatus(id, newStatus) {
             status: newStatus,
             priority: task.priority,
             due_date: task.due_date,
+            remind_at: task.remind_at,
             category_id: task.category_id,
             tag_ids: (task.tags || []).map(t => t.id)
         };
@@ -572,8 +589,25 @@ function renderTasks() {
         let dueDateHtml = '';
         if (task.due_date) {
             const dueDate = new Date(task.due_date);
-            const isOverdue = dueDate < new Date() && task.status !== 'COMPLETED';
-            dueDateHtml = `<span class="due-date ${isOverdue ? 'overdue' : ''}">📅 ${dueDate.toLocaleDateString()}</span>`;
+            const now = new Date();
+            const diffTime = dueDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const isOverdue = dueDate < now && task.status !== 'COMPLETED';
+            const isSoon = diffDays > 0 && diffDays <= 2 && task.status !== 'COMPLETED';
+            
+            let dateClass = '';
+            let dateText = dueDate.toLocaleDateString();
+            
+            if (isOverdue) {
+                dateClass = 'overdue';
+                dateText = `Overdue by ${Math.abs(diffDays)} days`;
+            } else if (isSoon) {
+                dateClass = 'soon';
+                dateText = `Due in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+            }
+            
+            dueDateHtml = `<span class="due-date ${dateClass}">📅 ${dateText}</span>`;
         }
         
         let categoryHtml = '';
@@ -605,6 +639,7 @@ function renderTasks() {
                 </div>
             </div>
             <div class="task-actions">
+                <button class="btn-icon" onclick="openFocusMode(${task.id})" title="Focus Mode">🎯</button>
                 <button class="btn-icon" onclick="updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
                 <button class="btn-icon" onclick="openEditModal(${task.id})" title="Edit Task">✎</button>
                 <button class="btn-icon delete" onclick="deleteTask(${task.id})" title="Delete Task">✕</button>
@@ -622,6 +657,183 @@ function escapeHtml(unsafe) {
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
+}
+
+// --- Focus Mode ---
+let focusInterval = null;
+let focusTimeLeft = 25 * 60; // 25 mins
+
+function openFocusMode(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    document.getElementById('focus-task-title').textContent = task.title;
+    document.getElementById('focus-modal').classList.add('active');
+    resetFocusTimer();
+}
+
+function closeFocusMode() {
+    document.getElementById('focus-modal').classList.remove('active');
+    clearInterval(focusInterval);
+    focusInterval = null;
+}
+
+function toggleFocusTimer() {
+    const btn = document.getElementById('focus-play-btn');
+    if (focusInterval) {
+        clearInterval(focusInterval);
+        focusInterval = null;
+        btn.textContent = '▶';
+    } else {
+        btn.textContent = '⏸';
+        focusInterval = setInterval(() => {
+            focusTimeLeft--;
+            updateFocusDisplay();
+            if (focusTimeLeft <= 0) {
+                clearInterval(focusInterval);
+                focusInterval = null;
+                btn.textContent = '▶';
+                showToast('Focus session complete!', 'success');
+            }
+        }, 1000);
+    }
+}
+
+function resetFocusTimer() {
+    clearInterval(focusInterval);
+    focusInterval = null;
+    focusTimeLeft = 25 * 60;
+    document.getElementById('focus-play-btn').textContent = '▶';
+    updateFocusDisplay();
+}
+
+function updateFocusDisplay() {
+    const m = Math.floor(focusTimeLeft / 60).toString().padStart(2, '0');
+    const s = (focusTimeLeft % 60).toString().padStart(2, '0');
+    document.getElementById('focus-timer').textContent = `${m}:${s}`;
+}
+
+// --- Calendar View ---
+let calendar = null;
+
+async function toggleCalendarView() {
+    currentFilter = 'CALENDAR';
+    currentViewTitle.textContent = 'Calendar View';
+    
+    document.getElementById('tasks-container').style.display = 'none';
+    document.getElementById('calendar-container').style.display = 'block';
+    
+    // Deactivate other sidebar buttons and activate calendar
+    document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+    const calBtn = document.querySelector('button[data-filter="CALENDAR"]');
+    if (calBtn) calBtn.classList.add('active');
+    
+    if (!calendar) {
+        const calendarEl = document.getElementById('calendar-container');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            height: '100%',
+            events: function(info, successCallback, failureCallback) {
+                let events = [];
+                // Add Tasks
+                tasks.forEach(task => {
+                    if (task.due_date) {
+                        events.push({
+                            title: task.title,
+                            start: task.due_date,
+                            color: task.status === 'COMPLETED' ? 'var(--success)' : 'var(--primary)',
+                            allDay: true
+                        });
+                    }
+                });
+                
+                // Hardcode Indian Holidays for 2026 since public APIs lack full support
+                const indianHolidays2026 = [
+                    { date: '2026-01-26', name: 'Republic Day' },
+                    { date: '2026-03-03', name: 'Holi' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-07-18', name: 'July Festival (Test)' }, // Added so you see it today!
+                    { date: '2026-08-15', name: 'Independence Day' },
+                    { date: '2026-10-02', name: 'Gandhi Jayanti' },
+                    { date: '2026-10-19', name: 'Dussehra' },
+                    { date: '2026-11-08', name: 'Diwali' },
+                    { date: '2026-12-25', name: 'Christmas Day' }
+                ];
+                
+                indianHolidays2026.forEach(h => {
+                    events.push({
+                        title: `🎉 ${h.name}`,
+                        start: h.date,
+                        color: 'var(--danger)',
+                        allDay: true,
+                        display: 'background'
+                    });
+                });
+
+                successCallback(events);
+            }
+        });
+        calendar.render();
+        // Force a resize fix for FullCalendar initially hiding in flex containers
+        setTimeout(() => calendar.updateSize(), 100);
+    } else {
+        calendar.refetchEvents();
+    }
+}
+
+// Intercept regular filter clicks to hide calendar
+const originalFilterTasks = filterTasks;
+window.filterTasks = function(status) {
+    if (status !== 'CALENDAR') {
+        document.getElementById('tasks-container').style.display = 'flex';
+        document.getElementById('calendar-container').style.display = 'none';
+        
+        // Fix active class logic
+        document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.querySelector(`button[data-filter="${status}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+    }
+    
+    // Override the original to prevent event.currentTarget error
+    currentFilter = status;
+    
+    if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
+    else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
+    else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
+    else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
+
+    renderTasks();
+};
+
+// --- Reminders ---
+let notifiedTaskIds = new Set();
+
+function checkReminders() {
+    if (Notification.permission !== 'granted') return;
+    
+    const now = new Date();
+    tasks.forEach(task => {
+        if (task.status !== 'COMPLETED' && task.remind_at) {
+            const remindTime = new Date(task.remind_at);
+            if (remindTime <= now && !notifiedTaskIds.has(task.id)) {
+                new Notification("Task Reminder", {
+                    body: `It's time to work on: ${task.title}`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/1828/1828640.png"
+                });
+                notifiedTaskIds.add(task.id);
+            }
+        }
+    });
+}
+
+// Request permission and start polling
+if ("Notification" in window) {
+    Notification.requestPermission();
+    setInterval(checkReminders, 60000); // Check every minute
 }
 
 init();

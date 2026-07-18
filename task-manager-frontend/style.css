@@ -457,6 +457,7 @@ button {
 .task-meta { display: flex; align-items: center; gap: 1.5rem; font-size: 0.8rem; color: var(--text-secondary); }
 .due-date { display: flex; align-items: center; gap: 0.35rem; }
 .due-date.overdue { color: var(--danger); font-weight: 600; }
+.due-date.soon { color: var(--warning); font-weight: 600; }
 
 .task-actions { display: flex; gap: 0.5rem; opacity: 0.6; transition: var(--transition); }
 .task-item:hover .task-actions { opacity: 1; }
@@ -527,3 +528,35 @@ button {
 .subtask-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
 .subtask-item span { flex: 1; font-size: 0.9rem; }
 .subtask-item.completed span { text-decoration: line-through; opacity: 0.5; }
+
+/* Focus Mode */
+.focus-overlay {
+    background: var(--bg-color);
+    z-index: 1000;
+}
+.focus-content {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3rem; text-align: center; height: 100vh;
+}
+#focus-task-title { font-size: 3rem; font-weight: 800; color: var(--primary); }
+.timer-display { font-size: 8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.focus-controls { display: flex; gap: 2rem; }
+.focus-btn {
+    width: 80px; height: 80px; border-radius: 50%;
+    font-size: 2rem; background: var(--card-bg);
+}
+.focus-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+.focus-btn.stop:hover { background: var(--danger); }
+
+/* FullCalendar Overrides */
+.fc { color: var(--text-primary); }
+.fc-theme-standard td, .fc-theme-standard th { border-color: var(--card-border); }
+.fc-theme-standard .fc-scrollgrid { border-color: var(--card-border); }
+.fc .fc-button-primary {
+    background-color: var(--primary); border-color: var(--primary);
+}
+.fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: var(--primary-hover); border-color: var(--primary-hover);
+}
+.fc-event { cursor: pointer; }
+
