@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Request
-from app.api.deps import DBDep, CurrentUserDep
+from app.api.deps import DBDep, CurrentUserDep, PaginationDep
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 from app.services.category_service import CategoryService
 from app.core.rate_limit import limiter
@@ -16,9 +16,10 @@ router = APIRouter()
 async def read_categories(
     request: Request,
     db: DBDep,
-    current_user: CurrentUserDep
+    current_user: CurrentUserDep,
+    pagination: PaginationDep
 ):
-    return await CategoryService.get_categories(db, owner_id=current_user.id)
+    return await CategoryService.get_categories(db, owner_id=current_user.id, skip=pagination.skip, limit=pagination.limit)
 
 @router.post(
     "/",
@@ -52,7 +53,7 @@ async def update_category(
 
 @router.delete(
     "/{category_id}",
-    response_model=CategoryResponse,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a category"
 )
 @limiter.limit("60/minute")
@@ -62,4 +63,5 @@ async def delete_category(
     current_user: CurrentUserDep,
     category_id: int,
 ):
-    return await CategoryService.delete_category(db, category_id, owner_id=current_user.id)
+    await CategoryService.delete_category(db, category_id, owner_id=current_user.id)
+

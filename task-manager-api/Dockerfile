@@ -18,12 +18,20 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
 # Copy virtualenv and app files
 COPY --from=builder /app/.venv /app/.venv
 COPY . /app
 
+# Change ownership to appuser
+RUN chown -R appuser:appuser /app
+
 # Ensure the virtualenv is used
 ENV PATH="/app/.venv/bin:$PATH"
+
+USER appuser
 
 EXPOSE 8000
 

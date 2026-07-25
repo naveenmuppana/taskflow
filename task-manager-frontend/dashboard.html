@@ -207,14 +207,22 @@
             </div>
             
             <form id="category-form" onsubmit="saveCategory(event)" style="margin-bottom: 20px;">
-                <div class="input-row">
-                    <div class="input-group" style="flex: 3;">
+                <div class="input-row" style="align-items: center; flex-wrap: wrap;">
+                    <div class="input-group" style="flex: 1; min-width: 180px; margin-bottom: 8px;">
                         <input type="text" id="new-category-name" required placeholder="New Category Name">
                     </div>
-                    <div class="input-group" style="flex: 1;">
-                        <input type="color" id="new-category-color" value="#8b5cf6" style="width: 100%; height: 42px; padding: 2px;">
+                    <div class="color-swatches" id="category-color-swatches" style="margin-bottom: 8px;">
+                        <button type="button" class="swatch active" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></button>
+                        <button type="button" class="swatch" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></button>
+                        <button type="button" class="swatch" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
+                        <button type="button" class="swatch" data-color="#10b981" style="background: #10b981;" title="Green"></button>
+                        <button type="button" class="swatch" data-color="#f59e0b" style="background: #f59e0b;" title="Amber"></button>
+                        <button type="button" class="swatch" data-color="#f43f5e" style="background: #f43f5e;" title="Rose"></button>
+                        <button type="button" class="swatch" data-color="#f97316" style="background: #f97316;" title="Orange"></button>
+                        <button type="button" class="swatch" data-color="#64748b" style="background: #64748b;" title="Slate"></button>
                     </div>
-                    <button type="submit" class="btn-primary" style="align-self: center;">Add</button>
+                    <input type="hidden" id="new-category-color" value="#8b5cf6">
+                    <button type="submit" class="btn-primary" style="margin-bottom: 8px;">Add</button>
                 </div>
             </form>
 
@@ -235,14 +243,22 @@
             </div>
             
             <form id="tag-form" onsubmit="saveTag(event)" style="margin-bottom: 20px;">
-                <div class="input-row">
-                    <div class="input-group" style="flex: 3;">
+                <div class="input-row" style="align-items: center; flex-wrap: wrap;">
+                    <div class="input-group" style="flex: 1; min-width: 180px; margin-bottom: 8px;">
                         <input type="text" id="new-tag-name" required placeholder="New Tag Name">
                     </div>
-                    <div class="input-group" style="flex: 1;">
-                        <input type="color" id="new-tag-color" value="#10b981" style="width: 100%; height: 42px; padding: 2px;">
+                    <div class="color-swatches" id="tag-color-swatches" style="margin-bottom: 8px;">
+                        <button type="button" class="swatch active" data-color="#10b981" style="background: #10b981;" title="Green"></button>
+                        <button type="button" class="swatch" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></button>
+                        <button type="button" class="swatch" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
+                        <button type="button" class="swatch" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></button>
+                        <button type="button" class="swatch" data-color="#f59e0b" style="background: #f59e0b;" title="Amber"></button>
+                        <button type="button" class="swatch" data-color="#f43f5e" style="background: #f43f5e;" title="Rose"></button>
+                        <button type="button" class="swatch" data-color="#f97316" style="background: #f97316;" title="Orange"></button>
+                        <button type="button" class="swatch" data-color="#64748b" style="background: #64748b;" title="Slate"></button>
                     </div>
-                    <button type="submit" class="btn-primary" style="align-self: center;">Add</button>
+                    <input type="hidden" id="new-tag-color" value="#10b981">
+                    <button type="submit" class="btn-primary" style="margin-bottom: 8px;">Add</button>
                 </div>
             </form>
 

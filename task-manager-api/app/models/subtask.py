@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, func, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -11,8 +11,12 @@ if TYPE_CHECKING:
 
 class Subtask(Base):
     __tablename__ = "subtasks"
+    __table_args__ = (
+        Index("ix_subtasks_task_id_owner_id", "task_id", "owner_id"),
+    )
     
     id: Mapped[int] = mapped_column(primary_key=True)
+
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     

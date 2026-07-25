@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.api.deps import DBDep
+from app.api.deps import DBDep, CurrentUserDep
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.token import Token, TokenRefreshRequest
 from app.services.auth_service import AuthService
@@ -51,3 +51,13 @@ async def login(
 @limiter.limit("10/minute")
 async def refresh_token(request: Request, db: DBDep, body: TokenRefreshRequest):
     return await AuthService.refresh_tokens(db, refresh_token=body.refresh_token)
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Logout user",
+    description="Revokes all active access and refresh tokens for the current user by incrementing their token version."
+)
+async def logout(request: Request, db: DBDep, current_user: CurrentUserDep):
+    await AuthService.revoke_all_tokens(db, current_user.id)
+

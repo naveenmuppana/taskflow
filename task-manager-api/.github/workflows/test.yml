@@ -1,4 +1,4 @@
-name: Test Suite
+name: Enterprise CI/CD Pipeline
 
 on:
   push:
@@ -8,11 +8,39 @@ on:
 
 jobs:
   test:
+    name: Unit & Integration Tests (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+        
+    - name: Install Dependencies
+      run: uv sync
+      
+    - name: Run Pytest Suite
+      run: uv run pytest -v
+
+  migration-check:
+    name: Verify Database Migrations
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
@@ -20,10 +48,31 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v3
       with:
-        version: "0.1.12" # Matches project's initialization version, or use "latest"
+        version: "latest"
         
-    - name: Install dependencies
-      run: uv sync --frozen
+    - name: Install Dependencies
+      run: uv sync
       
-    - name: Run tests with pytest
-      run: uv run pytest
+    - name: Test Alembic Migrations
+      env:
+        DATABASE_URL: "sqlite+aiosqlite:///./test_migration.db"
+      run: uv run alembic upgrade head
+
+  docker-build:
+    name: Validate Container Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Hardened Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: taskflow-api:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

@@ -55,8 +55,8 @@ class AuthService:
     @classmethod
     async def login_user(cls, db: AsyncSession, email: str, password: str) -> Token:
         user = await cls.authenticate_user(db, email, password)
-        access_token = security.create_access_token(subject=user.id)
-        refresh_token = security.create_refresh_token(subject=user.id)
+        access_token = security.create_access_token(subject=user.id, token_version=user.token_version)
+        refresh_token = security.create_refresh_token(subject=user.id, token_version=user.token_version)
         return Token(access_token=access_token, refresh_token=refresh_token)
 
     @classmethod
@@ -77,7 +77,17 @@ class AuthService:
         user = await cls.get_user_by_id(db, user_id)
         if not user or not user.is_active:
             raise UserNotFoundException("User associated with token not found or inactive")
+        if user.token_version != payload.get("ver", 0):
+            raise TokenInvalidException("Token has been revoked")
 
-        access_token = security.create_access_token(subject=user.id)
-        new_refresh_token = security.create_refresh_token(subject=user.id)
+        access_token = security.create_access_token(subject=user.id, token_version=user.token_version)
+        new_refresh_token = security.create_refresh_token(subject=user.id, token_version=user.token_version)
         return Token(access_token=access_token, refresh_token=new_refresh_token)
+
+    @classmethod
+    async def revoke_all_tokens(cls, db: AsyncSession, user_id: int) -> None:
+        user = await cls.get_user_by_id(db, user_id)
+        if user:
+            user.token_version += 1
+            await db.commit()
+

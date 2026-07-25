@@ -1,24 +1,21 @@
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.subtask import Subtask
 from app.models.task import Task
 from app.schemas.subtask import SubtaskCreate, SubtaskUpdate
+from app.core.exceptions import TaskNotFoundException, SubtaskNotFoundException
 
 class SubtaskService:
     @staticmethod
-    async def get_subtasks(db: AsyncSession, task_id: int, owner_id: int) -> list[Subtask]:
+    async def get_subtasks(db: AsyncSession, task_id: int, owner_id: int, skip: int = 0, limit: int = 100) -> list[Subtask]:
         # Check if user owns the task first
         query = select(Task).where(Task.id == task_id, Task.owner_id == owner_id)
         result = await db.execute(query)
         if not result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found"
-            )
+            raise TaskNotFoundException()
 
-        query = select(Subtask).where(Subtask.task_id == task_id)
+        query = select(Subtask).where(Subtask.task_id == task_id).offset(skip).limit(limit)
         result = await db.execute(query)
         return list(result.scalars().all())
 
@@ -28,10 +25,7 @@ class SubtaskService:
         query = select(Task).where(Task.id == subtask_in.task_id, Task.owner_id == owner_id)
         result = await db.execute(query)
         if not result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found"
-            )
+            raise TaskNotFoundException()
 
         db_subtask = Subtask(**subtask_in.model_dump(), owner_id=owner_id)
         db.add(db_subtask)
@@ -45,10 +39,7 @@ class SubtaskService:
         result = await db.execute(query)
         db_subtask = result.scalar_one_or_none()
         if not db_subtask:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Subtask not found"
-            )
+            raise SubtaskNotFoundException()
         
         update_data = subtask_in.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -59,16 +50,13 @@ class SubtaskService:
         return db_subtask
 
     @staticmethod
-    async def delete_subtask(db: AsyncSession, subtask_id: int, owner_id: int) -> Subtask:
+    async def delete_subtask(db: AsyncSession, subtask_id: int, owner_id: int) -> None:
         query = select(Subtask).where(Subtask.id == subtask_id, Subtask.owner_id == owner_id)
         result = await db.execute(query)
         db_subtask = result.scalar_one_or_none()
         if not db_subtask:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Subtask not found"
-            )
+            raise SubtaskNotFoundException()
         
         await db.delete(db_subtask)
         await db.commit()
-        return db_subtask
+

@@ -111,10 +111,9 @@ async def update_task(
 
 @router.delete(
     "/{task_id}", 
-    response_model=TaskResponse,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a task",
-    description="Permanently deletes a specific task owned by the user.",
-    response_description="The deleted task object details"
+    description="Permanently deletes a specific task owned by the user."
 )
 @limiter.limit("60/minute")
 async def delete_task(
@@ -123,4 +122,5 @@ async def delete_task(
     current_user: CurrentUserDep,
     task_id: int,
 ):
-    return await TaskService.delete_task(db, task_id, owner_id=current_user.id)
+    await TaskService.delete_task(db, task_id, owner_id=current_user.id)
+

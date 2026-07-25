@@ -2,13 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.category import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
-from app.core.exceptions import ForbiddenException
-from fastapi import HTTPException, status
+from app.core.exceptions import ForbiddenException, CategoryNotFoundException
 
 class CategoryService:
     @staticmethod
-    async def get_categories(db: AsyncSession, owner_id: int) -> list[Category]:
-        result = await db.execute(select(Category).where(Category.owner_id == owner_id).order_by(Category.name))
+    async def get_categories(db: AsyncSession, owner_id: int, skip: int = 0, limit: int = 100) -> list[Category]:
+        result = await db.execute(select(Category).where(Category.owner_id == owner_id).order_by(Category.name).offset(skip).limit(limit))
         return list(result.scalars().all())
 
     @staticmethod
@@ -16,7 +15,7 @@ class CategoryService:
         result = await db.execute(select(Category).where(Category.id == category_id))
         category = result.scalars().first()
         if not category:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+            raise CategoryNotFoundException()
         if category.owner_id != owner_id:
             raise ForbiddenException("You do not have permission to access this category")
         return category
@@ -47,8 +46,8 @@ class CategoryService:
         return db_category
 
     @classmethod
-    async def delete_category(cls, db: AsyncSession, category_id: int, owner_id: int) -> Category:
+    async def delete_category(cls, db: AsyncSession, category_id: int, owner_id: int) -> None:
         db_category = await cls.get_category(db, category_id, owner_id)
         await db.delete(db_category)
         await db.commit()
-        return db_category
+

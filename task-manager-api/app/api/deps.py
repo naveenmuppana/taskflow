@@ -41,6 +41,8 @@ async def get_current_user(db: DBDep, token: TokenDep) -> User:
         raise UserNotFoundException("User not found")
     if not user.is_active:
         raise UserNotFoundException("User account is inactive")
+    if user.token_version != payload.get("ver", 0):
+        raise TokenInvalidException("Token has been revoked")
     return user
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]

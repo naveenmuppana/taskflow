@@ -71,5 +71,5 @@ async def test_user(db: AsyncSession) -> User:
 
 @pytest.fixture
 async def auth_headers(test_user: User) -> dict[str, str]:
-    access_token = security.create_access_token(subject=test_user.id)
+    access_token = security.create_access_token(subject=test_user.id, token_version=test_user.token_version)
     return {"Authorization": f"Bearer {access_token}"}

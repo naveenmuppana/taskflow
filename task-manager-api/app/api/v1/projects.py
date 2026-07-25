@@ -1,11 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from typing import List
-
-from app.api.deps import DBDep, CurrentUserDep
-from app.models.project import Project
+from fastapi import APIRouter, status
+from app.api.deps import DBDep, CurrentUserDep, PaginationDep
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.services.project_service import ProjectService
 
 router = APIRouter()
 
@@ -15,19 +12,15 @@ async def create_project(
     db: DBDep,
     current_user: CurrentUserDep
 ):
-    project = Project(**project_in.model_dump(), owner_id=current_user.id)
-    db.add(project)
-    await db.commit()
-    await db.refresh(project)
-    return project
+    return await ProjectService.create_project(db, project_in, current_user.id)
 
 @router.get("/", response_model=List[ProjectResponse])
 async def read_projects(
     db: DBDep,
-    current_user: CurrentUserDep
+    current_user: CurrentUserDep,
+    pagination: PaginationDep
 ):
-    result = await db.execute(select(Project).where(Project.owner_id == current_user.id))
-    return result.scalars().all()
+    return await ProjectService.get_projects(db, current_user.id, skip=pagination.skip, limit=pagination.limit)
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def read_project(
@@ -35,11 +28,7 @@ async def read_project(
     db: DBDep,
     current_user: CurrentUserDep
 ):
-    result = await db.execute(select(Project).where(Project.id == project_id, Project.owner_id == current_user.id))
-    project = result.scalars().first()
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return project
+    return await ProjectService.get_project_by_id(db, project_id, current_user.id)
 
 @router.put("/{project_id}", response_model=ProjectResponse)
 async def update_project(
@@ -48,18 +37,7 @@ async def update_project(
     db: DBDep,
     current_user: CurrentUserDep
 ):
-    result = await db.execute(select(Project).where(Project.id == project_id, Project.owner_id == current_user.id))
-    project = result.scalars().first()
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    
-    update_data = project_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(project, field, value)
-        
-    await db.commit()
-    await db.refresh(project)
-    return project
+    return await ProjectService.update_project(db, project_id, project_in, current_user.id)
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(
@@ -67,10 +45,4 @@ async def delete_project(
     db: DBDep,
     current_user: CurrentUserDep
 ):
-    result = await db.execute(select(Project).where(Project.id == project_id, Project.owner_id == current_user.id))
-    project = result.scalars().first()
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-        
-    await db.delete(project)
-    await db.commit()
+    await ProjectService.delete_project(db, project_id, current_user.id)

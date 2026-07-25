@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Request
-from app.api.deps import DBDep, CurrentUserDep
+from app.api.deps import DBDep, CurrentUserDep, PaginationDep
 from app.schemas.tag import TagCreate, TagUpdate, TagResponse
 from app.services.tag_service import TagService
 from app.core.rate_limit import limiter
@@ -16,9 +16,10 @@ router = APIRouter()
 async def read_tags(
     request: Request,
     db: DBDep,
-    current_user: CurrentUserDep
+    current_user: CurrentUserDep,
+    pagination: PaginationDep
 ):
-    return await TagService.get_tags(db, owner_id=current_user.id)
+    return await TagService.get_tags(db, owner_id=current_user.id, skip=pagination.skip, limit=pagination.limit)
 
 @router.post(
     "/",
@@ -52,7 +53,7 @@ async def update_tag(
 
 @router.delete(
     "/{tag_id}",
-    response_model=TagResponse,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a tag"
 )
 @limiter.limit("60/minute")
@@ -62,4 +63,5 @@ async def delete_tag(
     current_user: CurrentUserDep,
     tag_id: int,
 ):
-    return await TagService.delete_tag(db, tag_id, owner_id=current_user.id)
+    await TagService.delete_tag(db, tag_id, owner_id=current_user.id)
+

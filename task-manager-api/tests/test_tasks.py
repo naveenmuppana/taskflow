@@ -113,7 +113,7 @@ async def test_delete_task(
     await db.refresh(task)
 
     response = await client.delete(f"/api/v1/tasks/{task.id}", headers=auth_headers)
-    assert response.status_code == 200
+    assert response.status_code == 204
     
     db_check = await db.get(Task, task.id)
     assert db_check is None

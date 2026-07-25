@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Request
-from app.api.deps import DBDep, CurrentUserDep
+from app.api.deps import DBDep, CurrentUserDep, PaginationDep
 from app.schemas.subtask import SubtaskCreate, SubtaskUpdate, SubtaskResponse
 from app.services.subtask_service import SubtaskService
 from app.core.rate_limit import limiter
@@ -16,9 +16,10 @@ async def read_subtasks(
     request: Request,
     db: DBDep,
     current_user: CurrentUserDep,
+    pagination: PaginationDep,
     task_id: int
 ):
-    return await SubtaskService.get_subtasks(db, task_id, owner_id=current_user.id)
+    return await SubtaskService.get_subtasks(db, task_id, owner_id=current_user.id, skip=pagination.skip, limit=pagination.limit)
 
 @router.post(
     "/",
@@ -52,7 +53,7 @@ async def update_subtask(
 
 @router.delete(
     "/{subtask_id}",
-    response_model=SubtaskResponse,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a subtask"
 )
 @limiter.limit("60/minute")
@@ -62,4 +63,5 @@ async def delete_subtask(
     current_user: CurrentUserDep,
     subtask_id: int,
 ):
-    return await SubtaskService.delete_subtask(db, subtask_id, owner_id=current_user.id)
+    await SubtaskService.delete_subtask(db, subtask_id, owner_id=current_user.id)
+

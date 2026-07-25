@@ -38,9 +38,29 @@ const sortSelect = document.getElementById('sort-select');
 // Initialization
 async function init() {
     userEmailSpan.textContent = userEmail || 'User';
+    setupColorSwatches();
     await fetchCategories();
     await fetchTags();
     fetchTasks();
+}
+
+// Setup color swatch selectors
+function setupColorSwatches() {
+    document.querySelectorAll('.color-swatches').forEach(container => {
+        const inputId = container.id === 'category-color-swatches' ? 'new-category-color' : 'new-tag-color';
+        const hiddenInput = document.getElementById(inputId);
+        const swatches = container.querySelectorAll('.swatch');
+        
+        swatches.forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                swatches.forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                if (hiddenInput) {
+                    hiddenInput.value = swatch.getAttribute('data-color');
+                }
+            });
+        });
+    });
 }
 
 // --- Navigation & Logout ---

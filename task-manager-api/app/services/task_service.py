@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import or_, desc, asc, func
+from sqlalchemy import or_, desc, asc, func, case, and_
 from datetime import datetime, timezone
 from app.models.task import Task, TaskStatus, TaskPriority
 from app.models.tag import Tag
@@ -59,44 +59,20 @@ class TaskService:
 
     @staticmethod
     async def get_task_stats(db: AsyncSession, owner_id: int) -> TaskStatsResponse:
-        # Get total tasks
-        total_query = select(func.count(Task.id)).where(Task.owner_id == owner_id, Task.is_archived == False)
-        total_result = await db.execute(total_query)
-        total = total_result.scalar() or 0
+        query = select(
+            func.count(Task.id).label("total"),
+            func.count(case((Task.status == TaskStatus.COMPLETED, 1))).label("completed"),
+            func.count(case((Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS]), 1))).label("pending"),
+            func.count(case((and_(Task.status != TaskStatus.COMPLETED, Task.due_date < func.now()), 1))).label("overdue"),
+        ).where(Task.owner_id == owner_id, Task.is_archived == False)
 
-        # Get completed tasks
-        completed_query = select(func.count(Task.id)).where(
-            Task.owner_id == owner_id, 
-            Task.is_archived == False,
-            Task.status == TaskStatus.COMPLETED
-        )
-        completed_result = await db.execute(completed_query)
-        completed = completed_result.scalar() or 0
-
-        # Get pending/in progress tasks
-        pending_query = select(func.count(Task.id)).where(
-            Task.owner_id == owner_id, 
-            Task.is_archived == False,
-            Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS])
-        )
-        pending_result = await db.execute(pending_query)
-        pending = pending_result.scalar() or 0
-
-        # Get overdue tasks (status not completed and due_date < now)
-        overdue_query = select(func.count(Task.id)).where(
-            Task.owner_id == owner_id,
-            Task.is_archived == False,
-            Task.status != TaskStatus.COMPLETED,
-            Task.due_date < func.now()
-        )
-        overdue_result = await db.execute(overdue_query)
-        overdue = overdue_result.scalar() or 0
-
+        result = await db.execute(query)
+        row = result.one()
         return TaskStatsResponse(
-            total_tasks=total,
-            completed_tasks=completed,
-            pending_tasks=pending,
-            overdue_tasks=overdue
+            total_tasks=row.total or 0,
+            completed_tasks=row.completed or 0,
+            pending_tasks=row.pending or 0,
+            overdue_tasks=row.overdue or 0
         )
 
     @staticmethod
@@ -133,11 +109,9 @@ class TaskService:
 
         db.add(db_task)
         await db.commit()
-        await db.refresh(db_task)
-        
-        # Manually load the tags, category, subtasks and project if needed
-        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks), selectinload(Task.project)).where(Task.id == db_task.id))
-        return result.scalars().first()
+        await db.refresh(db_task, attribute_names=["category", "tags", "subtasks", "project"])
+        return db_task
+
 
     @classmethod
     async def update_task(
@@ -163,8 +137,8 @@ class TaskService:
         return db_task
 
     @classmethod
-    async def delete_task(cls, db: AsyncSession, task_id: int, owner_id: int) -> Task:
+    async def delete_task(cls, db: AsyncSession, task_id: int, owner_id: int) -> None:
         db_task = await cls.get_task(db, task_id, owner_id)
         await db.delete(db_task)
         await db.commit()
-        return db_task
+
