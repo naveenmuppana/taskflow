@@ -9,6 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from loguru import logger
 from sqlalchemy import text
+from fastapi.staticfiles import StaticFiles
 
 from app.api.deps import DBDep
 from app.api.v1.router import api_router
@@ -17,7 +18,6 @@ from app.core.exceptions import setup_exception_handlers
 from app.core.logger import setup_logging
 from app.core.rate_limit import limiter
 from app.db.session import engine
-import app.models  # noqa: Load models for SQLAlchemy registry
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,6 +68,8 @@ app = FastAPI(
     openapi_tags=openapi_tags,
     lifespan=lifespan,
 )
+
+app.mount("/static", StaticFiles(directory="app/static", html=True), name="static")
 
 # SlowAPI Setup
 app.state.limiter = limiter

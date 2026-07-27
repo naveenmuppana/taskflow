@@ -22,7 +22,12 @@ class TaskService:
         project_id: int | None = None,
         sort_by: str = "newest"
     ) -> list[Task]:
-        query = select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks), selectinload(Task.project)).where(Task.owner_id == owner_id, Task.is_archived == False)
+        query = select(Task).options(
+            selectinload(Task.category), 
+            selectinload(Task.tags), 
+            selectinload(Task.subtasks), 
+            selectinload(Task.project)
+        ).where(Task.owner_id == owner_id, Task.is_archived == False)
         
         if search:
             query = query.where(
@@ -45,7 +50,6 @@ class TaskService:
         elif sort_by == "due_date":
             query = query.order_by(Task.due_date.is_(None), asc(Task.due_date))
         elif sort_by == "priority":
-            # Just ordering by enum value (alphabetically) since sqlite doesn't easily support custom ordering
             query = query.order_by(desc(Task.priority))
         elif sort_by == "alphabetically":
             query = query.order_by(asc(Task.title))
@@ -77,7 +81,14 @@ class TaskService:
 
     @staticmethod
     async def get_task_by_id(db: AsyncSession, task_id: int) -> Task | None:
-        result = await db.execute(select(Task).options(selectinload(Task.category), selectinload(Task.tags), selectinload(Task.subtasks), selectinload(Task.project)).where(Task.id == task_id, Task.is_archived == False))
+        result = await db.execute(
+            select(Task).options(
+                selectinload(Task.category), 
+                selectinload(Task.tags), 
+                selectinload(Task.subtasks), 
+                selectinload(Task.project)
+            ).where(Task.id == task_id, Task.is_archived == False)
+        )
         return result.scalars().first()
 
     @classmethod
@@ -101,6 +112,7 @@ class TaskService:
             due_date=task_in.due_date,
             category_id=task_in.category_id,
             project_id=task_in.project_id,
+            is_archived=task_in.is_archived,
             owner_id=owner_id
         )
         if task_in.tag_ids:
@@ -109,9 +121,17 @@ class TaskService:
 
         db.add(db_task)
         await db.commit()
-        await db.refresh(db_task, attribute_names=["category", "tags", "subtasks", "project"])
-        return db_task
-
+        await db.refresh(db_task)
+        
+        result = await db.execute(
+            select(Task).options(
+                selectinload(Task.category), 
+                selectinload(Task.tags), 
+                selectinload(Task.subtasks), 
+                selectinload(Task.project)
+            ).where(Task.id == db_task.id)
+        )
+        return result.scalars().first()
 
     @classmethod
     async def update_task(

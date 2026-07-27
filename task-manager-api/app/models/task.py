@@ -1,17 +1,19 @@
 import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import String, DateTime, ForeignKey, func, Enum, Column, Integer, Index
+from sqlalchemy import String, DateTime, ForeignKey, func, Enum, Column, Integer, Index, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.tag import task_tags
 
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.category import Category
     from app.models.tag import Tag
-    from app.models.subtask import Subtask
     from app.models.project import Project
+    from app.models.subtask import Subtask
+    from app.models.time_entry import TimeEntry
 
 class TaskStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -23,7 +25,6 @@ class TaskPriority(str, enum.Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -46,9 +47,8 @@ class Task(Base):
         nullable=False
     )
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
-    project_id: Mapped[int | None] = mapped_column(ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
-    is_archived: Mapped[bool] = mapped_column(default=False, nullable=False, index=True, server_default="0")
+    remind_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -58,10 +58,14 @@ class Task(Base):
     )
     
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
+
     owner: Mapped["User"] = relationship(back_populates="tasks")
-    category: Mapped["Category"] = relationship(back_populates="tasks")
+    category: Mapped["Category | None"] = relationship(back_populates="tasks")
+    project: Mapped["Project | None"] = relationship(back_populates="tasks")
     tags: Mapped[list["Tag"]] = relationship(
-        secondary="task_tags", back_populates="tasks"
+        secondary=task_tags, back_populates="tasks"
     )
     subtasks: Mapped[list["Subtask"]] = relationship(back_populates="task", cascade="all, delete-orphan")
-    project: Mapped["Project"] = relationship(back_populates="tasks")
+    time_entries: Mapped[list["TimeEntry"]] = relationship(back_populates="task", cascade="all, delete-orphan")
