@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
 </head>
@@ -62,6 +62,7 @@
                 </div>
 
                 <div class="user-profile">
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
                     <span class="avatar">👤</span>
                     <span id="user-email">User</span>
                     <button class="btn-outline btn-sm" onclick="logout()">Logout</button>
@@ -159,8 +160,8 @@
                     <label for="task-desc">Description (Optional)</label>
                     <textarea id="task-desc" placeholder="Add some details..." rows="3"></textarea>
                 </div>
-                <div class="form-row">
-                    <div class="input-group third-width">
+                <div class="input-row">
+                    <div class="input-group" style="min-width: 100px;">
                         <label for="task-priority">Priority</label>
                         <select id="task-priority">
                             <option value="LOW">Low</option>
@@ -169,11 +170,20 @@
                             <option value="CRITICAL">Critical</option>
                         </select>
                     </div>
-                    <div class="input-group third-width">
+                    <div class="input-group" style="min-width: 120px;">
+                        <label for="task-status">Status</label>
+                        <select id="task-status">
+                            <option value="PENDING">Pending</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="min-width: 150px;">
                         <label for="task-due-date">Due Date (Optional)</label>
                         <input type="datetime-local" id="task-due-date">
                     </div>
-                    <div class="input-group third-width">
+                    <div class="input-group" style="min-width: 150px;">
                         <label for="task-remind-at">Remind At (Optional)</label>
                         <input type="datetime-local" id="task-remind-at">
                     </div>
@@ -299,6 +309,18 @@
                 <button class="btn-icon focus-btn stop" onclick="closeFocusMode()">⏹</button>
             </div>
         </div>
+    </div>
+
+    <!-- Indian Monument Watermark Backdrop -->
+    <div class="monument-backdrop">
+        <svg viewBox="0 0 300 300" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- India Gate Line Art -->
+            <path d="M 40 260 L 40 160 L 65 160 L 65 260 M 115 260 L 115 160 L 140 160 L 140 260 M 65 190 A 25 25 0 0 1 115 190 M 30 160 L 150 160 L 150 148 L 30 148 Z M 35 148 L 145 148 L 145 100 L 35 100 Z M 48 100 L 132 100 L 132 75 L 48 75 Z M 60 75 L 120 75 L 120 62 L 60 62 Z M 72 62 L 108 62 L 102 48 L 78 48 Z" />
+            <!-- Taj Mahal / Dome outline -->
+            <path d="M 180 260 L 180 200 L 280 200 L 280 260 M 200 200 L 200 170 C 200 140, 215 130, 230 130 C 245 130, 260 140, 260 200 M 230 130 C 230 115, 225 100, 230 90 C 235 100, 230 115, 230 130 M 165 260 L 165 150 M 160 150 L 170 150 M 165 150 L 165 140 M 295 260 L 295 150 M 290 150 L 300 150 M 295 150 L 295 140" />
+            <!-- Base Ground Line -->
+            <path d="M 10 260 L 290 260" stroke-width="2" />
+        </svg>
     </div>
 
     <script src="dashboard.js"></script>

@@ -1,3 +1,19 @@
+// Theme Initialization & Logic
+const savedTheme = localStorage.getItem('theme') || 'light';
+if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+}
+
+function toggleTheme() {
+    if (document.body.classList.contains('dark-theme')) {
+        document.body.classList.remove('dark-theme');
+        localStorage.setItem('theme', 'light');
+    } else {
+        document.body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
 const API_URL = 'http://localhost:8000/api/v1';
 
 // State & Auth Guard
@@ -80,6 +96,7 @@ function openModal() {
     taskModal.classList.add('active');
     document.getElementById('modal-title').textContent = 'Create New Task';
     document.getElementById('subtasks-section').style.display = 'none';
+    document.getElementById('task-status').value = 'PENDING';
     taskTitleInput.focus();
 }
 
@@ -89,6 +106,7 @@ function openEditModal(id) {
     
     document.getElementById('task-id').value = task.id;
     document.getElementById('modal-title').textContent = 'Edit Task';
+    document.getElementById('task-status').value = task.status || 'PENDING';
     
     taskTitleInput.value = task.title;
     taskDescInput.value = task.description || '';
@@ -368,6 +386,7 @@ async function saveTask(e) {
         title: taskTitleInput.value,
         description: taskDescInput.value || null,
         priority: taskPriorityInput.value,
+        status: document.getElementById('task-status').value
     };
 
     if (taskDueDateInput.value) {
@@ -399,8 +418,6 @@ async function saveTask(e) {
         let res;
         if (id) {
             // Update
-            const task = tasks.find(t => t.id == id);
-            payload.status = task.status; // preserve status
             res = await fetch(`${API_URL}/tasks/${id}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -690,6 +707,11 @@ function openFocusMode(taskId) {
     document.getElementById('focus-task-title').textContent = task.title;
     document.getElementById('focus-modal').classList.add('active');
     resetFocusTimer();
+    
+    // Automatically transition to IN_PROGRESS if currently PENDING
+    if (task.status === 'PENDING') {
+        updateTaskStatus(taskId, 'IN_PROGRESS');
+    }
 }
 
 function closeFocusMode() {
@@ -757,7 +779,7 @@ async function toggleCalendarView() {
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek'
             },
-            height: '100%',
+            height: 'auto',
             events: function(info, successCallback, failureCallback) {
                 let events = [];
                 // Add Tasks
