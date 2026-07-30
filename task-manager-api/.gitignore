@@ -173,3 +173,7 @@ cython_debug/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Development/debug scripts — should not be in production commits
+drop_tables.py
+test_login.py

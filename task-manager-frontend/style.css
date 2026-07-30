@@ -543,6 +543,8 @@ body.dark-theme .theme-toggle-btn:hover {
 .status-PENDING { background: var(--warning-bg); color: var(--warning); border: 1px solid #FCD34D; }
 .status-IN_PROGRESS { background: var(--info-bg); color: var(--info); border: 1px solid #7DD3FC; }
 .status-COMPLETED { background: var(--success-bg); color: var(--success); border: 1px solid #6EE7B7; }
+.status-CANCELLED { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; text-decoration: line-through; }
+body.dark-theme .status-CANCELLED { background: #1E2530; color: #64748B; border-color: #334155; }
 
 .priority-HIGH, .priority-CRITICAL { background: var(--danger-bg); color: var(--danger); }
 .priority-MEDIUM { background: var(--info-bg); color: var(--info); }

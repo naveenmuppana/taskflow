@@ -17,8 +17,19 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     tag_ids: Optional[List[int]] = Field(default=None, title="Tag IDs", description="List of tag IDs to associate with the task")
 
-class TaskUpdate(TaskBase):
-    tag_ids: Optional[List[int]] = Field(default=None, title="Tag IDs", description="List of tag IDs to associate with the task")
+# Independent from TaskBase — ALL fields optional so partial updates (e.g. status-only) pass validation
+class TaskUpdate(BaseModel):
+    title: Optional[str] = Field(None, title="Title", min_length=1, max_length=255)
+    description: Optional[str] = Field(None, title="Description", max_length=1024)
+    status: Optional[TaskStatus] = Field(None, title="Status")
+    priority: Optional[TaskPriority] = Field(None, title="Priority")
+    due_date: Optional[datetime] = Field(None, title="Due Date")
+    remind_at: Optional[datetime] = Field(None, title="Remind At")
+    category_id: Optional[int] = Field(None, title="Category ID")
+    project_id: Optional[int] = Field(None, title="Project ID")
+    is_archived: Optional[bool] = Field(None, title="Archived")
+    tag_ids: Optional[List[int]] = Field(None, title="Tag IDs")
+
 
 class TaskInDBBase(TaskBase):
     id: int = Field(..., title="ID", description="Unique identifier for the task", examples=[1])

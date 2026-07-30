@@ -84,6 +84,7 @@ async function login(email, password) {
     if (!res.ok) throw new Error(data.detail || 'Login failed');
 
     localStorage.setItem('token', data.access_token);
+    if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
     localStorage.setItem('userEmail', email); // Save email for the dashboard navbar
     
     // Redirect to the dashboard

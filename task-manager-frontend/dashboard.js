@@ -76,9 +76,22 @@ function setupColorSwatches() {
 }
 
 // --- Navigation & Logout ---
-function logout() {
+async function logout() {
+    // Call the backend to revoke the token before clearing local state
+    const currentToken = localStorage.getItem('token');
+    if (currentToken) {
+        try {
+            await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+        } catch (e) {
+            // Continue with local logout even if server call fails
+        }
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('refreshToken');
     window.location.href = 'index.html';
 }
 
@@ -185,6 +198,7 @@ function filterTasks(status) {
     else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
     else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
     else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
+    else if (status === 'CANCELLED') currentViewTitle.textContent = 'Cancelled Tasks';
 
     renderTasks();
 }
@@ -196,9 +210,8 @@ function applyFilters() {
 // --- Categories ---
 async function fetchCategories() {
     try {
-        const res = await fetch(`${API_URL}/categories/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await apiFetch(`${API_URL}/categories/`);
+        if (!res) return;
         categories = await res.json();
         
         // Populate modal selects
@@ -242,12 +255,12 @@ async function saveCategory(e) {
     const color = document.getElementById('new-category-color').value;
     
     try {
-        const res = await fetch(`${API_URL}/categories/`, {
+        const res = await apiFetch(`${API_URL}/categories/`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, color })
         });
-        if (res.ok) {
+        if (res && res.ok) {
             document.getElementById('new-category-name').value = '';
             showToast('Category created');
             fetchCategories();
@@ -260,14 +273,11 @@ async function saveCategory(e) {
 async function deleteCategory(id) {
     if (!confirm('Delete this category?')) return;
     try {
-        const res = await fetch(`${API_URL}/categories/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
+        const res = await apiFetch(`${API_URL}/categories/${id}`, { method: 'DELETE' });
+        if (res && res.ok) {
             showToast('Category deleted');
             fetchCategories();
-            fetchTasks(); // refresh tasks since category might be removed
+            fetchTasks();
         }
     } catch (err) {
         showToast('Error deleting category', 'danger');
@@ -277,9 +287,8 @@ async function deleteCategory(id) {
 // --- Tags ---
 async function fetchTags() {
     try {
-        const res = await fetch(`${API_URL}/tags/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await apiFetch(`${API_URL}/tags/`);
+        if (!res) return;
         tags = await res.json();
         
         // Populate modal selects
@@ -316,12 +325,12 @@ async function saveTag(e) {
     const color = document.getElementById('new-tag-color').value;
     
     try {
-        const res = await fetch(`${API_URL}/tags/`, {
+        const res = await apiFetch(`${API_URL}/tags/`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, color })
         });
-        if (res.ok) {
+        if (res && res.ok) {
             document.getElementById('new-tag-name').value = '';
             showToast('Tag created');
             fetchTags();
@@ -334,14 +343,11 @@ async function saveTag(e) {
 async function deleteTag(id) {
     if (!confirm('Delete this tag?')) return;
     try {
-        const res = await fetch(`${API_URL}/tags/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
+        const res = await apiFetch(`${API_URL}/tags/${id}`, { method: 'DELETE' });
+        if (res && res.ok) {
             showToast('Tag deleted');
             fetchTags();
-            fetchTasks(); // refresh tasks
+            fetchTasks();
         }
     } catch (err) {
         showToast('Error deleting tag', 'danger');
@@ -349,27 +355,66 @@ async function deleteTag(id) {
 }
 
 
+// --- Token Refresh Helper ---
+let isRefreshing = false;
+
+async function refreshAccessToken() {
+    if (isRefreshing) return false;
+    isRefreshing = true;
+    try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) return false;
+        const res = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        localStorage.setItem('token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
+        // Update the module-level token constant by reloading the page state
+        window.location.reload();
+        return true;
+    } catch (e) {
+        return false;
+    } finally {
+        isRefreshing = false;
+    }
+}
+
+async function apiFetch(url, options = {}) {
+    const currentToken = localStorage.getItem('token');
+    const headers = { 'Authorization': `Bearer ${currentToken}`, ...options.headers };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) {
+            await logout();
+            return null;
+        }
+    }
+    return res;
+}
+
 // --- API Calls ---
 async function fetchTasks() {
     try {
-        const res = await fetch(`${API_URL}/tasks/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.status === 401) return logout();
-        
-        tasks = await res.json();
-        
-        // Stats update
-        const total = tasks.length;
-        const pending = tasks.filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS').length;
-        const completed = tasks.filter(t => t.status === 'COMPLETED').length;
-        const overdue = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'COMPLETED').length;
-        
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-pending').textContent = pending;
-        document.getElementById('stat-completed').textContent = completed;
-        document.getElementById('stat-overdue').textContent = overdue;
+        const [tasksRes, statsRes] = await Promise.all([
+            apiFetch(`${API_URL}/tasks/`),
+            apiFetch(`${API_URL}/tasks/stats`)
+        ]);
+
+        if (!tasksRes || !statsRes) return;
+
+        tasks = await tasksRes.json();
+
+        // Use server-computed stats (accurate even with pagination or timezone)
+        const stats = await statsRes.json();
+        document.getElementById('stat-total').textContent = stats.total_tasks;
+        document.getElementById('stat-pending').textContent = stats.pending_tasks;
+        document.getElementById('stat-completed').textContent = stats.completed_tasks;
+        document.getElementById('stat-overdue').textContent = stats.overdue_tasks;
 
         renderTasks();
     } catch (err) {
@@ -418,25 +463,25 @@ async function saveTask(e) {
         let res;
         if (id) {
             // Update
-            res = await fetch(`${API_URL}/tasks/${id}`, {
+            res = await apiFetch(`${API_URL}/tasks/${id}`, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
         } else {
             // Create
-            res = await fetch(`${API_URL}/tasks/`, {
+            res = await apiFetch(`${API_URL}/tasks/`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
         }
 
-        if (res.ok) {
+        if (res && res.ok) {
             closeModal('task-modal');
             showToast(id ? 'Task updated!' : 'Task created!');
             fetchTasks();
-        } else {
+        } else if (res) {
             const data = await res.json();
             showToast(Array.isArray(data.detail) ? data.detail[0].msg : data.detail, 'danger');
         }
@@ -448,24 +493,13 @@ async function saveTask(e) {
 
 async function updateTaskStatus(id, newStatus) {
     try {
-        const task = tasks.find(t => t.id === id);
-        const payload = {
-            title: task.title,
-            description: task.description,
-            status: newStatus,
-            priority: task.priority,
-            due_date: task.due_date,
-            remind_at: task.remind_at,
-            category_id: task.category_id,
-            tag_ids: (task.tags || []).map(t => t.id)
-        };
-        const res = await fetch(`${API_URL}/tasks/${id}`, {
+        // Send only the status field — TaskUpdate now has all fields optional
+        const res = await apiFetch(`${API_URL}/tasks/${id}`, {
             method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
         });
-
-        if (res.ok) fetchTasks();
+        if (res && res.ok) fetchTasks();
     } catch (err) {
         showToast('Failed to update task status', 'danger');
     }
@@ -474,11 +508,8 @@ async function updateTaskStatus(id, newStatus) {
 async function deleteTask(id) {
     if (!confirm('Are you sure you want to delete this task?')) return;
     try {
-        const res = await fetch(`${API_URL}/tasks/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
+        const res = await apiFetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' });
+        if (res && res.ok) {
             showToast('Task deleted');
             fetchTasks();
         }
@@ -509,12 +540,12 @@ async function addSubtask() {
     if (!title || !taskId) return;
     
     try {
-        const res = await fetch(`${API_URL}/subtasks/`, {
+        const res = await apiFetch(`${API_URL}/subtasks/`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, task_id: parseInt(taskId) })
         });
-        if (res.ok) {
+        if (res && res.ok) {
             titleInput.value = '';
             await fetchTasks();
             renderSubtasks(tasks.find(t => t.id == taskId));
@@ -527,12 +558,12 @@ async function addSubtask() {
 async function toggleSubtask(subtaskId, isCompleted) {
     const taskId = document.getElementById('task-id').value;
     try {
-        const res = await fetch(`${API_URL}/subtasks/${subtaskId}`, {
+        const res = await apiFetch(`${API_URL}/subtasks/${subtaskId}`, {
             method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_completed: isCompleted })
         });
-        if (res.ok) {
+        if (res && res.ok) {
             await fetchTasks();
             renderSubtasks(tasks.find(t => t.id == taskId));
         }
@@ -544,11 +575,8 @@ async function toggleSubtask(subtaskId, isCompleted) {
 async function deleteSubtask(subtaskId) {
     const taskId = document.getElementById('task-id').value;
     try {
-        const res = await fetch(`${API_URL}/subtasks/${subtaskId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
+        const res = await apiFetch(`${API_URL}/subtasks/${subtaskId}`, { method: 'DELETE' });
+        if (res && res.ok) {
             await fetchTasks();
             renderSubtasks(tasks.find(t => t.id == taskId));
         }
@@ -794,12 +822,11 @@ async function toggleCalendarView() {
                     }
                 });
                 
-                // Hardcode Indian Holidays for 2026 since public APIs lack full support
+                // Indian National Holidays 2026
                 const indianHolidays2026 = [
                     { date: '2026-01-26', name: 'Republic Day' },
                     { date: '2026-03-03', name: 'Holi' },
                     { date: '2026-04-03', name: 'Good Friday' },
-                    { date: '2026-07-18', name: 'July Festival (Test)' }, // Added so you see it today!
                     { date: '2026-08-15', name: 'Independence Day' },
                     { date: '2026-10-02', name: 'Gandhi Jayanti' },
                     { date: '2026-10-19', name: 'Dussehra' },
@@ -848,6 +875,7 @@ window.filterTasks = function(status) {
     else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
     else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
     else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
+    else if (status === 'CANCELLED') currentViewTitle.textContent = 'Cancelled Tasks';
 
     renderTasks();
 };
