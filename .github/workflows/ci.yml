@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./task-manager-api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run Pytest
+        env:
+          SECRET_KEY: "test-secret-key-for-ci-only"
+          DATABASE_URL: "sqlite+aiosqlite:///./test_ci.db"
+        run: uv run pytest -v
+
+  docker-build:
+    name: Build Docker Images
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build API Image
+        run: docker build -t task-manager-api -f task-manager-api/Dockerfile task-manager-api/
+
+      - name: Build Frontend Image
+        run: docker build -t task-manager-frontend -f task-manager-frontend/Dockerfile task-manager-frontend/
