@@ -90,8 +90,11 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_time_entries_id'), ['id'], unique=False)
         batch_op.create_index(batch_op.f('ix_time_entries_task_id'), ['task_id'], unique=False)
 
+    taskpriority_enum = sa.Enum('LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'URGENT', name='taskpriority')
+    taskpriority_enum.create(op.get_bind(), checkfirst=True)
+
     with op.batch_alter_table('tasks', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('priority', sa.Enum('LOW', 'MEDIUM', 'HIGH', 'CRITICAL', name='taskpriority'), nullable=False))
+        batch_op.add_column(sa.Column('priority', taskpriority_enum, nullable=False, server_default='LOW'))
         batch_op.add_column(sa.Column('due_date', sa.DateTime(timezone=True), nullable=True))
         batch_op.add_column(sa.Column('category_id', sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column('project_id', sa.Integer(), nullable=True))
@@ -125,6 +128,9 @@ def downgrade() -> None:
         batch_op.drop_column('category_id')
         batch_op.drop_column('due_date')
         batch_op.drop_column('priority')
+        
+    taskpriority_enum = sa.Enum('LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'URGENT', name='taskpriority')
+    taskpriority_enum.drop(op.get_bind(), checkfirst=True)
 
     with op.batch_alter_table('time_entries', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_time_entries_task_id'))
