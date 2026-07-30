@@ -1,7 +1,7 @@
 """cleanup_unused_tables_add_indexes_and_token_version
 
 Revision ID: e89f1a2b3c4d
-Revises: b562c62ee749
+Revises: a765d96d3bcd
 Create Date: 2026-07-25 10:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'e89f1a2b3c4d'
-down_revision: Union[str, Sequence[str], None] = 'b562c62ee749'
+down_revision: Union[str, Sequence[str], None] = 'a765d96d3bcd'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

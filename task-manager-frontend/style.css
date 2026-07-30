@@ -101,6 +101,7 @@ body {
     padding: 0.5rem 1rem;
     border-radius: 20px;
     background: rgba(0, 0, 0, 0.3);
+}
 
 /* Add an elegant inner glow */
 .glass-card::before {
@@ -154,6 +155,31 @@ select option {
     font-weight: 500;
     color: var(--text-secondary);
     letter-spacing: 0.5px;
+}
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.password-wrapper input {
+    padding-right: 3rem;
+}
+.toggle-password-btn {
+    position: absolute;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.toggle-password-btn:hover {
+    color: var(--text-primary);
 }
 .input-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 .input-row > .input-group { flex: 1; min-width: 200px; }
