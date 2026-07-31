@@ -14,7 +14,7 @@ function toggleTheme() {
     }
 }
 
-const API_URL = 'https://taskflow-cr3c.onrender.com/';
+const API_URL = 'https://taskflow-cr3c.onrender.com/api/v1';
 
 // State
 let currentAuthTab = 'login';
