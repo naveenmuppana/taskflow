@@ -153,8 +153,17 @@ class TaskService:
             
         db.add(db_task)
         await db.commit()
-        await db.refresh(db_task)
-        return db_task
+        
+        # Reload with relationships
+        result = await db.execute(
+            select(Task).options(
+                selectinload(Task.category), 
+                selectinload(Task.tags), 
+                selectinload(Task.subtasks), 
+                selectinload(Task.project)
+            ).where(Task.id == db_task.id)
+        )
+        return result.scalars().first()
 
     @classmethod
     async def delete_task(cls, db: AsyncSession, task_id: int, owner_id: int) -> None:

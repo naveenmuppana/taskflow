@@ -210,7 +210,8 @@ function handleSearch(e) {
 function filterTasks(status) {
     currentFilter = status;
     document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    const activeBtn = document.querySelector(`.sidebar-nav .nav-btn[onclick*="filterTasks('${status}')"]`) || document.querySelector(`.sidebar-nav .nav-btn[data-filter="${status}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
     
     if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
     else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';

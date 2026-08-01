@@ -14,11 +14,10 @@ function toggleTheme() {
     }
 }
 
-const API_URL = 'https://taskflow-cr3c.onrender.com/api/v1';
+const API_URL = 'http://localhost:8000/api/v1';
 
 // State
-const savedAuthTab = sessionStorage.getItem('authTab') || 'login';
-let currentAuthTab = savedAuthTab;
+let currentAuthTab = 'login';
 const token = localStorage.getItem('token');
 
 // Redirect if already logged in
@@ -35,24 +34,12 @@ const authError = document.getElementById('auth-error');
 // Tabs
 function switchAuthTab(tab) {
     currentAuthTab = tab;
-    sessionStorage.setItem('authTab', tab);
-    
-    document.querySelectorAll('.tab').forEach(btn => {
-        if (btn.textContent.toLowerCase() === tab) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
+    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = Array.from(document.querySelectorAll('.tab')).find(btn => btn.textContent.toLowerCase().includes(tab));
+    if (activeBtn) activeBtn.classList.add('active');
     authSubmitBtn.textContent = tab === 'login' ? 'Login' : 'Register';
     authError.textContent = '';
 }
-
-// Initialize correct tab on load
-document.addEventListener('DOMContentLoaded', () => {
-    switchAuthTab(currentAuthTab);
-});
 
 // Toast Notification
 function showToast(message, type = 'success') {
@@ -63,28 +50,12 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// Loading State Helper
-function setLoading(btn, isLoading, originalText = '') {
-    if (isLoading) {
-        btn.disabled = true;
-        btn.classList.add('loading');
-        btn.innerHTML = `<span class="spinner"></span> Processing...`;
-    } else {
-        btn.disabled = false;
-        btn.classList.remove('loading');
-        btn.textContent = originalText;
-    }
-}
-
 // Auth Submission
 async function handleAuth(e) {
     e.preventDefault();
     authError.textContent = '';
     const email = emailInput.value;
     const password = passwordInput.value;
-    const originalText = currentAuthTab === 'login' ? 'Login' : 'Register';
-    
-    setLoading(authSubmitBtn, true, originalText);
 
     try {
         if (currentAuthTab === 'login') {
@@ -96,7 +67,6 @@ async function handleAuth(e) {
         }
     } catch (err) {
         authError.textContent = err.message;
-        setLoading(authSubmitBtn, false, originalText);
     }
 }
 
@@ -117,7 +87,7 @@ async function login(email, password) {
     localStorage.setItem('token', data.access_token);
     if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
     localStorage.setItem('userEmail', email); // Save email for the dashboard navbar
-    
+
     // Redirect to the dashboard
     window.location.href = 'dashboard.html';
 }
@@ -128,7 +98,7 @@ async function register(email, password) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
     });
-    
+
     const data = await res.json();
     if (!res.ok) {
         if (Array.isArray(data.detail)) {
