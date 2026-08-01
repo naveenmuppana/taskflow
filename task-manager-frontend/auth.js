@@ -17,7 +17,8 @@ function toggleTheme() {
 const API_URL = 'https://taskflow-cr3c.onrender.com/api/v1';
 
 // State
-let currentAuthTab = 'login';
+const savedAuthTab = sessionStorage.getItem('authTab') || 'login';
+let currentAuthTab = savedAuthTab;
 const token = localStorage.getItem('token');
 
 // Redirect if already logged in
@@ -34,11 +35,24 @@ const authError = document.getElementById('auth-error');
 // Tabs
 function switchAuthTab(tab) {
     currentAuthTab = tab;
-    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    sessionStorage.setItem('authTab', tab);
+    
+    document.querySelectorAll('.tab').forEach(btn => {
+        if (btn.textContent.toLowerCase() === tab) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
     authSubmitBtn.textContent = tab === 'login' ? 'Login' : 'Register';
     authError.textContent = '';
 }
+
+// Initialize correct tab on load
+document.addEventListener('DOMContentLoaded', () => {
+    switchAuthTab(currentAuthTab);
+});
 
 // Toast Notification
 function showToast(message, type = 'success') {
@@ -49,12 +63,28 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+// Loading State Helper
+function setLoading(btn, isLoading, originalText = '') {
+    if (isLoading) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = `<span class="spinner"></span> Processing...`;
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.textContent = originalText;
+    }
+}
+
 // Auth Submission
 async function handleAuth(e) {
     e.preventDefault();
     authError.textContent = '';
     const email = emailInput.value;
     const password = passwordInput.value;
+    const originalText = currentAuthTab === 'login' ? 'Login' : 'Register';
+    
+    setLoading(authSubmitBtn, true, originalText);
 
     try {
         if (currentAuthTab === 'login') {
@@ -66,6 +96,7 @@ async function handleAuth(e) {
         }
     } catch (err) {
         authError.textContent = err.message;
+        setLoading(authSubmitBtn, false, originalText);
     }
 }
 

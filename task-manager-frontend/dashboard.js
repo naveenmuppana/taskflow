@@ -103,6 +103,28 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+// Loading State Helper
+function setLoading(btn, isLoading, originalText = '') {
+    if (!btn) return;
+    if (isLoading) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;margin-right:6px;border-width:2px;display:inline-block;vertical-align:middle;"></span> <span style="vertical-align:middle;">Processing...</span>`;
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        if (originalText !== null) btn.textContent = originalText;
+    }
+}
+
+// Format local date for datetime-local input safely
+function formatLocalDateForInput(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 // --- Modals ---
 function openModal() {
     document.getElementById('task-id').value = '';
@@ -138,17 +160,13 @@ function openEditModal(id) {
     });
 
     if (task.due_date) {
-        const dt = new Date(task.due_date);
-        dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-        taskDueDateInput.value = dt.toISOString().slice(0, 16);
+        taskDueDateInput.value = formatLocalDateForInput(task.due_date);
     } else {
         taskDueDateInput.value = '';
     }
 
     if (task.remind_at) {
-        const rt = new Date(task.remind_at);
-        rt.setMinutes(rt.getMinutes() - rt.getTimezoneOffset());
-        taskRemindAtInput.value = rt.toISOString().slice(0, 16);
+        taskRemindAtInput.value = formatLocalDateForInput(task.remind_at);
     } else {
         taskRemindAtInput.value = '';
     }
@@ -251,9 +269,11 @@ function closeCategoryModal() {
 
 async function saveCategory(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
     const name = document.getElementById('new-category-name').value;
     const color = document.getElementById('new-category-color').value;
     
+    setLoading(btn, true, 'Add');
     try {
         const res = await apiFetch(`${API_URL}/categories/`, {
             method: 'POST',
@@ -261,12 +281,21 @@ async function saveCategory(e) {
             body: JSON.stringify({ name, color })
         });
         if (res && res.ok) {
+            const newCat = await res.json();
             document.getElementById('new-category-name').value = '';
             showToast('Category created');
-            fetchCategories();
+            
+            // Preserve form selection
+            const currentSelected = taskCategorySelect.value;
+            await fetchCategories();
+            taskCategorySelect.value = newCat.id || currentSelected;
+            
+            closeCategoryModal();
         }
     } catch (err) {
         showToast('Error saving category', 'danger');
+    } finally {
+        setLoading(btn, false, 'Add');
     }
 }
 
@@ -321,9 +350,11 @@ function closeTagModal() {
 
 async function saveTag(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
     const name = document.getElementById('new-tag-name').value;
     const color = document.getElementById('new-tag-color').value;
     
+    setLoading(btn, true, 'Add');
     try {
         const res = await apiFetch(`${API_URL}/tags/`, {
             method: 'POST',
@@ -331,12 +362,26 @@ async function saveTag(e) {
             body: JSON.stringify({ name, color })
         });
         if (res && res.ok) {
+            const newTag = await res.json();
             document.getElementById('new-tag-name').value = '';
             showToast('Tag created');
-            fetchTags();
+            
+            // Preserve form selection
+            const currentSelected = Array.from(taskTagsSelect.selectedOptions).map(o => o.value);
+            await fetchTags();
+            
+            Array.from(taskTagsSelect.options).forEach(opt => {
+                if (currentSelected.includes(opt.value) || opt.value == newTag.id) {
+                    opt.selected = true;
+                }
+            });
+            
+            closeTagModal();
         }
     } catch (err) {
         showToast('Error saving tag', 'danger');
+    } finally {
+        setLoading(btn, false, 'Add');
     }
 }
 
@@ -426,6 +471,8 @@ async function saveTask(e) {
     e.preventDefault();
     
     const id = document.getElementById('task-id').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = 'Save Task';
     
     const payload = {
         title: taskTitleInput.value,
@@ -459,6 +506,7 @@ async function saveTask(e) {
         payload.tag_ids = [];
     }
 
+    setLoading(btn, true, originalText);
     try {
         let res;
         if (id) {
@@ -487,6 +535,8 @@ async function saveTask(e) {
         }
     } catch (err) {
         showToast('Network error', 'danger');
+    } finally {
+        setLoading(btn, false, originalText);
     }
 }
 
@@ -705,10 +755,10 @@ function renderTasks() {
                 </div>
             </div>
             <div class="task-actions">
-                <button class="btn-icon" onclick="openFocusMode(${task.id})" title="Focus Mode">🎯</button>
-                <button class="btn-icon" onclick="updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
-                <button class="btn-icon" onclick="openEditModal(${task.id})" title="Edit Task">✎</button>
-                <button class="btn-icon delete" onclick="deleteTask(${task.id})" title="Delete Task">✕</button>
+                <button type="button" class="btn-icon" onclick="event.stopPropagation(); openFocusMode(${task.id})" title="Focus Mode">🎯</button>
+                <button type="button" class="btn-icon" onclick="event.stopPropagation(); updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
+                <button type="button" class="btn-icon" onclick="event.stopPropagation(); openEditModal(${task.id})" title="Edit Task">✎</button>
+                <button type="button" class="btn-icon delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete Task">✕</button>
             </div>
         `;
         tasksContainer.appendChild(div);
