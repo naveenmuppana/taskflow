@@ -38,6 +38,7 @@
 }
 
 body.dark-theme {
+    color-scheme: dark;
     /* DARK THEME VARIABLES */
     --bg-color: #0B0F19;        /* Midnight Blue */
     --bg-accent: #111827;      /* Darker background */
@@ -95,18 +96,14 @@ body.dark-theme ::-webkit-scrollbar-thumb { background: #475569; }
     top: 0; left: 0; width: 100vw; height: 100vh;
     z-index: -2;
     background-color: var(--bg-color);
-    background-image: 
-        linear-gradient(var(--card-border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--card-border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.6;
+    background-image: radial-gradient(var(--text-secondary) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.15;
 }
 
 body.dark-theme .animated-bg {
-    background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    opacity: 0.8;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+    opacity: 0.25;
 }
 
 /* Monument Background Outlines */
@@ -384,10 +381,10 @@ button.loading {
     text-align: center;
 }
 .tab.active {
-    background: var(--card-bg);
-    color: var(--primary);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--card-border);
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--primary);
 }
 
 .error-msg {
