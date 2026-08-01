@@ -304,7 +304,8 @@
 
     <!-- Focus Mode Modal -->
     <div id="focus-modal" class="modal-overlay focus-overlay">
-        <div class="focus-content">
+        <div class="focus-content" style="position: relative;">
+            <button type="button" class="btn-icon close-modal" style="position: absolute; top: 15px; right: 15px;" onclick="closeFocusMode()">✕</button>
             <h2 id="focus-task-title">Task Title</h2>
             <div class="timer-display" id="focus-timer">25:00</div>
             <div class="focus-controls">
