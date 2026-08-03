@@ -84,10 +84,10 @@ body {
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-body.dark-theme ::-webkit-scrollbar-thumb { background: #475569; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; }
+body.dark-theme ::-webkit-scrollbar-thumb { background: #334155; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
 /* Elegant Background Pattern */
@@ -199,7 +199,7 @@ input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--primary);
     background: var(--card-bg);
-    box-shadow: 0 0 0 2px hsla(215, 80%, 40%, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 input::placeholder, textarea::placeholder {
@@ -681,8 +681,8 @@ body.dark-theme .task-category { background: rgba(16,185,129,0.1); color: #34D39
 .modal-content {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 8px;
-    width: 100%; max-width: 500px; padding: 1.75rem;
+    border-radius: 12px;
+    width: 100%; max-width: 500px; padding: 2rem;
     box-shadow: var(--shadow-lg);
     max-height: 85vh; overflow-y: auto;
     position: relative;
@@ -727,7 +727,7 @@ body.dark-theme .task-category { background: rgba(16,185,129,0.1); color: #34D39
     padding: 0.5rem; background: var(--bg-accent);
     border-radius: 6px; margin-bottom: 0.35rem;
 }
-.subtask-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+.subtask-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
 .subtask-item span { flex: 1; font-size: 0.85rem; }
 .subtask-item.completed span { text-decoration: line-through; opacity: 0.5; }
 
