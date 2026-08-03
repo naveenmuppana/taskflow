@@ -576,7 +576,7 @@ body.dark-theme .theme-toggle-btn:hover {
 }
 
 /* Tasks */
-.tasks-scroll-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+.tasks-scroll-area { flex: 1; overflow: auto; padding: 1.5rem; }
 #tasks-container { max-width: 840px; margin: 0 auto; }
 .task-list { display: flex; flex-direction: column; gap: 0.5rem; }
 
