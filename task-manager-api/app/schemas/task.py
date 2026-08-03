@@ -13,6 +13,8 @@ class TaskBase(BaseModel):
     category_id: Optional[int] = Field(None, title="Category ID", description="The category this task belongs to")
     project_id: Optional[int] = Field(None, title="Project ID", description="The project this task belongs to")
     is_archived: Optional[bool] = Field(default=False, title="Archived", description="Whether the task is archived")
+    is_recurring: Optional[bool] = Field(default=False, title="Recurring", description="Whether the task repeats")
+    recurrence_rule: Optional[str] = Field(None, title="Recurrence Rule", description="The rule for repeating the task (e.g. daily, weekly)")
 
 class TaskCreate(TaskBase):
     tag_ids: Optional[List[int]] = Field(default=None, title="Tag IDs", description="List of tag IDs to associate with the task")
@@ -29,6 +31,8 @@ class TaskUpdate(BaseModel):
     project_id: Optional[int] = Field(None, title="Project ID")
     is_archived: Optional[bool] = Field(None, title="Archived")
     tag_ids: Optional[List[int]] = Field(None, title="Tag IDs")
+    is_recurring: Optional[bool] = Field(None, title="Recurring")
+    recurrence_rule: Optional[str] = Field(None, title="Recurrence Rule")
 
 
 class TaskInDBBase(TaskBase):

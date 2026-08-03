@@ -44,6 +44,19 @@ const taskDueDateInput = document.getElementById('task-due-date');
 const taskRemindAtInput = document.getElementById('task-remind-at');
 const taskCategorySelect = document.getElementById('task-category');
 const taskTagsSelect = document.getElementById('task-tags');
+const taskIsRecurringInput = document.getElementById('task-is-recurring');
+const taskRecurrenceRuleSelect = document.getElementById('task-recurrence-rule');
+const recurrenceRuleGroup = document.getElementById('recurrence-rule-group');
+
+if (taskIsRecurringInput) {
+    taskIsRecurringInput.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            recurrenceRuleGroup.style.display = 'block';
+        } else {
+            recurrenceRuleGroup.style.display = 'none';
+        }
+    });
+}
 
 // Initialization
 async function init() {
@@ -132,6 +145,11 @@ function openModal() {
     document.getElementById('modal-title').textContent = 'Create New Task';
     document.getElementById('subtasks-section').style.display = 'none';
     document.getElementById('task-status').value = 'PENDING';
+    
+    taskIsRecurringInput.checked = false;
+    recurrenceRuleGroup.style.display = 'none';
+    taskRecurrenceRuleSelect.value = 'daily';
+    
     taskTitleInput.focus();
 }
 
@@ -170,6 +188,16 @@ function openEditModal(id) {
     } else {
         taskRemindAtInput.value = '';
     }
+    
+    if (task.is_recurring) {
+        taskIsRecurringInput.checked = true;
+        recurrenceRuleGroup.style.display = 'block';
+        taskRecurrenceRuleSelect.value = task.recurrence_rule || 'daily';
+    } else {
+        taskIsRecurringInput.checked = false;
+        recurrenceRuleGroup.style.display = 'none';
+        taskRecurrenceRuleSelect.value = 'daily';
+    }
 
     // Subtasks
     document.getElementById('subtasks-section').style.display = 'block';
@@ -192,6 +220,10 @@ function closeModal(modalId = 'task-modal') {
         taskPriorityInput.value = 'MEDIUM';
         taskCategorySelect.value = '';
         Array.from(taskTagsSelect.options).forEach(opt => opt.selected = false);
+        
+        taskIsRecurringInput.checked = false;
+        recurrenceRuleGroup.style.display = 'none';
+        taskRecurrenceRuleSelect.value = 'daily';
     }
 }
 
@@ -219,11 +251,37 @@ function filterTasks(status) {
     else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
     else if (status === 'CANCELLED') currentViewTitle.textContent = 'Cancelled Tasks';
 
+    document.getElementById('tasks-container').style.display = 'grid';
+    document.getElementById('calendar-container').style.display = 'none';
+    const kanbanContainer = document.getElementById('kanban-container');
+    if (kanbanContainer) kanbanContainer.style.display = 'none';
+
     renderTasks();
 }
 
+function toggleKanbanView() {
+    currentFilter = 'KANBAN';
+    currentViewTitle.textContent = 'Kanban Board';
+    
+    document.getElementById('tasks-container').style.display = 'none';
+    document.getElementById('calendar-container').style.display = 'none';
+    const kanbanContainer = document.getElementById('kanban-container');
+    if (kanbanContainer) kanbanContainer.style.display = 'flex';
+    
+    // Deactivate other sidebar buttons and activate kanban
+    document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+    const kBtn = document.querySelector('button[data-filter="KANBAN"]');
+    if (kBtn) kBtn.classList.add('active');
+    
+    renderKanban();
+}
+
 function applyFilters() {
-    renderTasks();
+    if (currentFilter === 'KANBAN') {
+        renderKanban();
+    } else {
+        renderTasks();
+    }
 }
 
 // --- Categories ---
@@ -499,6 +557,13 @@ async function saveTask(e) {
     } else {
         payload.category_id = null;
     }
+    
+    payload.is_recurring = taskIsRecurringInput.checked;
+    if (payload.is_recurring) {
+        payload.recurrence_rule = taskRecurrenceRuleSelect.value;
+    } else {
+        payload.recurrence_rule = null;
+    }
 
     const selectedTags = Array.from(taskTagsSelect.selectedOptions).map(opt => parseInt(opt.value));
     if (selectedTags.length > 0) {
@@ -736,10 +801,15 @@ function renderTasks() {
         if (task.tags && task.tags.length > 0) {
             tagsHtml = task.tags.map(t => `<span class="badge task-tag" style="border-color:${t.color}; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ');
         }
+        
+        let recurringHtml = '';
+        if (task.is_recurring) {
+            recurringHtml = `<span title="Recurring Task (${task.recurrence_rule})" style="margin-right: 5px; cursor: help;">🔁</span>`;
+        }
 
         div.innerHTML = `
             <div class="task-content" style="${opacityStyle}">
-                <div class="task-title" style="${lineStyle}">${escapeHtml(task.title)}</div>
+                <div class="task-title" style="${lineStyle}">${recurringHtml}${escapeHtml(task.title)}</div>
                 ${task.description ? `<div class="task-desc">${escapeHtml(task.description)}</div>` : ''}
                 
                 <div class="badges-container">
@@ -764,6 +834,99 @@ function renderTasks() {
         `;
         tasksContainer.appendChild(div);
     });
+}
+
+// --- Kanban View ---
+let kanbanSortables = [];
+
+function renderKanban() {
+    const kanbanContainer = document.getElementById('kanban-container');
+    if (!kanbanContainer) return;
+
+    // Filter tasks based on current search and other filters, except status
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const priorityFilter = document.getElementById('filter-priority').value;
+    const categoryFilter = document.getElementById('filter-category').value;
+    
+    let filteredTasks = tasks.filter(t => {
+        if (searchTerm && !t.title.toLowerCase().includes(searchTerm) && !(t.description && t.description.toLowerCase().includes(searchTerm))) return false;
+        if (priorityFilter && t.priority !== priorityFilter) return false;
+        if (categoryFilter && t.category_id != categoryFilter) return false;
+        return true;
+    });
+
+    const columns = {
+        'PENDING': document.querySelector('.kanban-column[data-status="PENDING"] .kanban-tasks'),
+        'IN_PROGRESS': document.querySelector('.kanban-column[data-status="IN_PROGRESS"] .kanban-tasks'),
+        'COMPLETED': document.querySelector('.kanban-column[data-status="COMPLETED"] .kanban-tasks'),
+        'CANCELLED': document.querySelector('.kanban-column[data-status="CANCELLED"] .kanban-tasks')
+    };
+
+    // Clear columns
+    Object.values(columns).forEach(col => {
+        if (col) col.innerHTML = '';
+    });
+
+    filteredTasks.forEach(task => {
+        const col = columns[task.status];
+        if (!col) return;
+
+        const div = document.createElement('div');
+        div.className = 'kanban-card';
+        div.dataset.id = task.id;
+        
+        let recurringHtml = task.is_recurring ? `<span title="Recurring Task (${task.recurrence_rule})">🔁</span> ` : '';
+        let tagsHtml = task.tags ? task.tags.map(t => `<span class="badge" style="background:${t.color}20; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ') : '';
+        
+        div.innerHTML = `
+            <div class="kanban-card-title">${recurringHtml}${escapeHtml(task.title)}</div>
+            ${task.description ? `<div class="kanban-card-desc">${escapeHtml(task.description).substring(0, 60)}${task.description.length > 60 ? '...' : ''}</div>` : ''}
+            <div class="kanban-card-meta">
+                <span class="badge priority-${task.priority}">${task.priority}</span>
+                ${tagsHtml}
+            </div>
+            <div class="task-actions" style="margin-top: 10px;">
+                <button type="button" class="btn-icon" onclick="event.stopPropagation(); openEditModal(${task.id})" title="Edit Task">✎</button>
+                <button type="button" class="btn-icon delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete Task">✕</button>
+            </div>
+        `;
+        
+        // Add click listener to open edit modal directly
+        div.addEventListener('click', (e) => {
+            // Prevent if a button was clicked inside
+            if (!e.target.closest('button')) {
+                openEditModal(task.id);
+            }
+        });
+
+        col.appendChild(div);
+    });
+
+    // Initialize Sortable if not already initialized
+    kanbanSortables.forEach(s => s.destroy());
+    kanbanSortables = [];
+    
+    if (typeof Sortable !== 'undefined') {
+        Object.entries(columns).forEach(([status, col]) => {
+            if (col) {
+                const sortable = new Sortable(col, {
+                    group: 'kanban',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function (evt) {
+                        const itemEl = evt.item;
+                        const taskId = itemEl.dataset.id;
+                        const newStatus = evt.to.closest('.kanban-column').dataset.status;
+                        
+                        if (evt.from !== evt.to) {
+                            updateTaskStatus(taskId, newStatus);
+                        }
+                    }
+                });
+                kanbanSortables.push(sortable);
+            }
+        });
+    }
 }
 
 function escapeHtml(unsafe) {

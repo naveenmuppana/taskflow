@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
 </head>
 <body class="dashboard-page">
@@ -40,6 +41,9 @@
                 </button>
                 <button class="nav-btn" data-filter="CALENDAR" onclick="toggleCalendarView()">
                     <span class="icon">📅</span> Calendar
+                </button>
+                <button class="nav-btn" data-filter="KANBAN" onclick="toggleKanbanView()">
+                    <span class="icon">📋</span> Kanban Board
                 </button>
                 <div class="nav-divider"></div>
                 <button class="nav-btn" onclick="openCategoryModal()">
@@ -136,6 +140,34 @@
                     <!-- Tasks injected by JS -->
                 </div>
                 <div id="calendar-container" style="display: none; height: 100%; min-height: 500px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px;"></div>
+                
+                <!-- Kanban Container -->
+                <div id="kanban-container" style="display: none;" class="kanban-board">
+                    <div class="kanban-column" data-status="PENDING">
+                        <div class="kanban-header">
+                            <h3>Pending</h3>
+                        </div>
+                        <div class="kanban-tasks" id="kanban-PENDING"></div>
+                    </div>
+                    <div class="kanban-column" data-status="IN_PROGRESS">
+                        <div class="kanban-header">
+                            <h3>In Progress</h3>
+                        </div>
+                        <div class="kanban-tasks" id="kanban-IN_PROGRESS"></div>
+                    </div>
+                    <div class="kanban-column" data-status="COMPLETED">
+                        <div class="kanban-header">
+                            <h3>Completed</h3>
+                        </div>
+                        <div class="kanban-tasks" id="kanban-COMPLETED"></div>
+                    </div>
+                    <div class="kanban-column" data-status="CANCELLED">
+                        <div class="kanban-header">
+                            <h3>Cancelled</h3>
+                        </div>
+                        <div class="kanban-tasks" id="kanban-CANCELLED"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Floating Action Button (FAB) -->
@@ -189,6 +221,21 @@
                     <div class="input-group" style="min-width: 150px;">
                         <label for="task-remind-at">Remind At (Optional)</label>
                         <input type="datetime-local" id="task-remind-at">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group" style="flex: 1; align-items: center; flex-direction: row; gap: 8px; margin-top: 25px;">
+                        <input type="checkbox" id="task-is-recurring" style="width: auto; margin: 0;">
+                        <label for="task-is-recurring" style="margin: 0; cursor: pointer;">Is Recurring?</label>
+                    </div>
+                    <div class="input-group" id="recurrence-rule-group" style="flex: 2; display: none;">
+                        <label for="task-recurrence-rule">Recurrence Pattern</label>
+                        <select id="task-recurrence-rule">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
                     </div>
                 </div>
                 <div class="input-row">

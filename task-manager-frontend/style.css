@@ -783,3 +783,94 @@ body.dark-theme .status-CANCELLED { background: #1E2530; color: #64748B; border-
 }
 .fc-event { cursor: pointer; padding: 2px 4px; border-radius: 4px; border: none !important; }
 .fc-event-title { color: white !important; font-weight: 500 !important; }
+
+/* Kanban Board */
+.kanban-board {
+    display: flex;
+    gap: 1.5rem;
+    height: calc(100vh - 180px); /* Adjust based on your layout */
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.kanban-column {
+    flex: 0 0 300px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+
+.kanban-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--card-border);
+    background: var(--bg-accent);
+    border-radius: 8px 8px 0 0;
+}
+
+.kanban-header h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.kanban-tasks {
+    padding: 1rem;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 150px;
+}
+
+.kanban-card {
+    background: var(--bg-color);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 1rem;
+    cursor: grab;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: var(--transition);
+}
+
+.kanban-card:active {
+    cursor: grabbing;
+}
+
+.kanban-card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: #CBD5E1;
+}
+
+body.dark-theme .kanban-card:hover {
+    border-color: #475569;
+}
+
+.kanban-card-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.kanban-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.kanban-card-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: var(--bg-accent) !important;
+}
