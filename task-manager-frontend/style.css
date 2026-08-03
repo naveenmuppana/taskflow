@@ -40,11 +40,11 @@
 body.dark-theme {
     color-scheme: dark;
     /* DARK THEME VARIABLES */
-    --bg-color: #0B0F19;        /* Midnight Blue */
-    --bg-accent: #111827;      /* Darker background */
-    --card-bg: #1E2530;        /* Graphite/Charcoal */
-    --card-hover: #232B39;
-    --card-border: #2E3A4E;    /* Dark slate border */
+    --bg-color: #0F172A;        /* Midnight Blue */
+    --bg-accent: #020617;      /* Deep Space */
+    --card-bg: #1E293B;        /* Slate */
+    --card-hover: #334155;
+    --card-border: #334155;    /* Dark slate border */
     
     /* Text Colors */
     --text-primary: #F1F5F9;   /* Soft Off-White */
@@ -77,7 +77,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     min-height: 100vh;
-    font-size: 13.5px; /* Smaller, minimal default font size */
+    font-size: 14px; /* More readable default font size */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -442,10 +442,6 @@ button.loading {
     display: flex; flex-direction: column;
 }
 
-body.dark-theme .sidebar {
-    background: #0d1117; /* Distinct darker color for dark mode sidebar */
-}
-
 .sidebar-brand {
     padding: 1rem 1.25rem; border-bottom: 1px solid var(--card-border);
 }
@@ -462,24 +458,23 @@ body.dark-theme .sidebar {
 }
 
 .nav-btn {
-    display: flex; align-items: center; gap: 0.5rem;
-    width: 100%; padding: 0.45rem 0.6rem;
-    border-radius: 6px; color: var(--text-secondary);
-    font-size: 0.825rem; font-weight: 500;
+    display: flex; align-items: center; gap: 0.6rem;
+    width: 100%; padding: 0.6rem 0.75rem;
+    border-radius: 8px; color: var(--text-secondary);
+    font-size: 0.85rem; font-weight: 500;
     text-align: left;
     background: transparent;
     transition: var(--transition);
 }
 .nav-btn:hover { background: var(--bg-accent); color: var(--text-primary); }
 .nav-btn.active {
-    background: var(--bg-accent);
-    color: var(--primary);
-    border-left: 3px solid var(--primary);
-    border-radius: 0 6px 6px 0;
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
 }
-.nav-btn .icon { font-size: 1rem; opacity: 0.8; }
-.nav-btn.active .icon { opacity: 1; }
-.nav-divider { height: 1px; background: var(--card-border); margin: 0.5rem 0; }
+.nav-btn .icon { font-size: 1rem; opacity: 0.7; }
+.nav-btn.active .icon { opacity: 1; color: white; }
+.nav-divider { height: 1px; background: var(--card-border); margin: 0.75rem 0; }
 
 .main-content {
     display: flex; flex-direction: column; height: 100vh;
@@ -488,20 +483,25 @@ body.dark-theme .sidebar {
 
 .top-nav {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0.6rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     background: var(--card-bg);
     border-bottom: 1px solid var(--card-border);
 }
 
-.top-nav h2 { font-size: 1.1rem; font-weight: 600; color: var(--primary); }
+.top-nav h2 { font-size: 1.25rem; font-weight: 600; color: var(--primary); margin: 0; }
 
-.search-container { position: relative; width: 220px; }
+.search-container { position: relative; width: 280px; }
 .search-icon {
-    position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%);
+    position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
     color: var(--text-secondary); font-size: 0.85rem;
 }
 #search-input {
-    padding-left: 1.75rem; height: 28px; font-size: 0.8rem; background: var(--bg-accent); border-radius: 4px;
+    padding-left: 2rem; height: 32px; font-size: 0.85rem; background: var(--bg-accent); border-radius: 6px; width: 100%; border: 1px solid var(--card-border); transition: var(--transition);
+}
+#search-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .user-profile { display: flex; align-items: center; gap: 0.75rem; }
@@ -538,16 +538,17 @@ body.dark-theme .theme-toggle-btn:hover {
 
 /* Stats */
 .dashboard-stats {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem;
-    padding: 1rem 1.5rem 0.25rem;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+    padding: 1.5rem 1.5rem 0.5rem;
 }
 .stat-card {
-    padding: 0.6rem 0.8rem; display: flex; align-items: center; gap: 0.75rem;
-    border-radius: 8px;
+    padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem;
+    border-radius: 12px;
     background: var(--card-bg);
     border: 1px solid var(--card-border);
+    transition: var(--transition);
 }
-.stat-card:hover { transform: none; box-shadow: var(--shadow-sm); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
 .stat-icon {
     width: 32px; height: 32px; border-radius: 6px;
@@ -587,15 +588,14 @@ body.dark-theme .theme-toggle-btn:hover {
 .task-item {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 8px; padding: 1rem 1.25rem;
+    border-radius: 8px; padding: 0.85rem 1.25rem;
     display: flex; justify-content: space-between; align-items: flex-start;
     transition: var(--transition);
     animation: slideUpFade 0.25s ease-out forwards;
 }
 .task-item:hover {
     background: var(--card-hover);
-    border-color: #CBD5E1;
-    body.dark-theme & { border-color: #475569; }
+    border-color: var(--primary);
     box-shadow: var(--shadow-sm);
 }
 
@@ -603,10 +603,10 @@ body.dark-theme .theme-toggle-btn:hover {
 .task-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; color: var(--primary); }
 .task-desc { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem; line-height: 1.4; }
 
-.badges-container { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+.badges-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
 .badge {
-    padding: 0.2rem 0.5rem; border-radius: 4px;
-    font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+    padding: 0.25rem 0.65rem; border-radius: 12px;
+    font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
 }
 
 /* Color Swatches Selector */
@@ -636,22 +636,24 @@ body.dark-theme .theme-toggle-btn:hover {
 .status-IN_PROGRESS { background: var(--info-bg); color: var(--info); border: 1px solid #7DD3FC; }
 .status-COMPLETED { background: var(--success-bg); color: var(--success); border: 1px solid #6EE7B7; }
 .status-CANCELLED { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; text-decoration: line-through; }
-body.dark-theme .status-CANCELLED { background: #1E2530; color: #64748B; border-color: #334155; }
+body.dark-theme .status-CANCELLED { background: #020617; color: #64748B; border-color: #334155; }
 
-.priority-HIGH, .priority-CRITICAL { background: var(--danger-bg); color: var(--danger); }
-.priority-MEDIUM { background: var(--info-bg); color: var(--info); }
+.priority-HIGH, .priority-CRITICAL { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+.priority-MEDIUM { background: var(--info-bg); color: var(--info); border: 1px solid rgba(59, 130, 246, 0.2); }
 .priority-LOW { background: var(--bg-accent); color: var(--text-secondary); border: 1px solid var(--card-border); }
 
-.task-tag { background: #F1F5F9; color: #475569; border: 1px solid var(--card-border); body.dark-theme & { background: #334155; color: #E2E8F0; } }
-.task-category { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; body.dark-theme & { background: rgba(16,185,129,0.15); color: #34D399; } }
+.task-tag { background: #F1F5F9; color: #475569; border: 1px solid var(--card-border); }
+body.dark-theme .task-tag { background: #020617; color: #94A3B8; }
+.task-category { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+body.dark-theme .task-category { background: rgba(16,185,129,0.1); color: #34D399; }
 
 .task-meta { display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; color: var(--text-secondary); }
 .due-date { display: flex; align-items: center; gap: 0.25rem; }
 .due-date.overdue { color: var(--danger); font-weight: 600; }
 .due-date.soon { color: var(--warning); font-weight: 600; }
 
-.task-actions { display: flex; gap: 0.35rem; opacity: 0.7; }
-.task-item:hover .task-actions { opacity: 1; }
+.task-actions { display: flex; gap: 0.5rem; opacity: 0; transform: translateX(5px); transition: var(--transition); }
+.task-item:hover .task-actions { opacity: 1; transform: translateX(0); }
 
 .empty-state { text-align: center; padding: 3rem 0; color: var(--text-secondary); }
 .empty-state h3 { color: var(--primary); font-size: 1.25rem; margin: 0.75rem 0 0.25rem; }
@@ -795,19 +797,19 @@ body.dark-theme .status-CANCELLED { background: #1E2530; color: #64748B; border-
 
 .kanban-column {
     flex: 0 0 300px;
-    background: var(--card-bg);
+    background: var(--bg-accent);
     border: 1px solid var(--card-border);
-    border-radius: 8px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     max-height: 100%;
 }
 
 .kanban-header {
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--card-border);
-    background: var(--bg-accent);
-    border-radius: 8px 8px 0 0;
+    background: transparent;
+    border-radius: 12px 12px 0 0;
 }
 
 .kanban-header h3 {
@@ -828,12 +830,12 @@ body.dark-theme .status-CANCELLED { background: #1E2530; color: #64748B; border-
 }
 
 .kanban-card {
-    background: var(--bg-color);
+    background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 6px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
     cursor: grab;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     transition: var(--transition);
 }
 
@@ -842,12 +844,8 @@ body.dark-theme .status-CANCELLED { background: #1E2530; color: #64748B; border-
 }
 
 .kanban-card:hover {
-    box-shadow: var(--shadow-sm);
-    border-color: #CBD5E1;
-}
-
-body.dark-theme .kanban-card:hover {
-    border-color: #475569;
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
 }
 
 .kanban-card-title {
@@ -871,6 +869,7 @@ body.dark-theme .kanban-card:hover {
 }
 
 .sortable-ghost {
-    opacity: 0.4;
-    background-color: var(--bg-accent) !important;
+    opacity: 0.5;
+    background-color: transparent !important;
+    border: 2px dashed var(--primary);
 }

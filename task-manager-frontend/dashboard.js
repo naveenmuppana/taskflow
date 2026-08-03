@@ -239,10 +239,29 @@ function handleSearch(e) {
     renderTasks();
 }
 
+function switchView(viewType) {
+    const tasksContainer = document.getElementById('tasks-container');
+    const calendarContainer = document.getElementById('calendar-container');
+    const kanbanContainer = document.getElementById('kanban-container');
+
+    tasksContainer.style.display = 'none';
+    calendarContainer.style.display = 'none';
+    if (kanbanContainer) kanbanContainer.style.display = 'none';
+
+    if (viewType === 'CALENDAR') {
+        calendarContainer.style.display = 'block';
+    } else if (viewType === 'KANBAN') {
+        if (kanbanContainer) kanbanContainer.style.display = 'flex';
+    } else {
+        tasksContainer.style.display = 'flex';
+        tasksContainer.style.flexDirection = 'column';
+    }
+}
+
 function filterTasks(status) {
     currentFilter = status;
     document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.querySelector(`.sidebar-nav .nav-btn[onclick*="filterTasks('${status}')"]`) || document.querySelector(`.sidebar-nav .nav-btn[data-filter="${status}"]`);
+    const activeBtn = document.querySelector(`button[data-filter="${status}"]`);
     if (activeBtn) activeBtn.classList.add('active');
     
     if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
@@ -251,11 +270,7 @@ function filterTasks(status) {
     else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
     else if (status === 'CANCELLED') currentViewTitle.textContent = 'Cancelled Tasks';
 
-    document.getElementById('tasks-container').style.display = 'grid';
-    document.getElementById('calendar-container').style.display = 'none';
-    const kanbanContainer = document.getElementById('kanban-container');
-    if (kanbanContainer) kanbanContainer.style.display = 'none';
-
+    switchView('LIST');
     renderTasks();
 }
 
@@ -263,16 +278,11 @@ function toggleKanbanView() {
     currentFilter = 'KANBAN';
     currentViewTitle.textContent = 'Kanban Board';
     
-    document.getElementById('tasks-container').style.display = 'none';
-    document.getElementById('calendar-container').style.display = 'none';
-    const kanbanContainer = document.getElementById('kanban-container');
-    if (kanbanContainer) kanbanContainer.style.display = 'flex';
-    
-    // Deactivate other sidebar buttons and activate kanban
     document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
     const kBtn = document.querySelector('button[data-filter="KANBAN"]');
     if (kBtn) kBtn.classList.add('active');
     
+    switchView('KANBAN');
     renderKanban();
 }
 
@@ -1004,13 +1014,11 @@ async function toggleCalendarView() {
     currentFilter = 'CALENDAR';
     currentViewTitle.textContent = 'Calendar View';
     
-    document.getElementById('tasks-container').style.display = 'none';
-    document.getElementById('calendar-container').style.display = 'block';
-    
-    // Deactivate other sidebar buttons and activate calendar
     document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
     const calBtn = document.querySelector('button[data-filter="CALENDAR"]');
     if (calBtn) calBtn.classList.add('active');
+    
+    switchView('CALENDAR');
     
     if (!calendar) {
         const calendarEl = document.getElementById('calendar-container');
@@ -1069,30 +1077,6 @@ async function toggleCalendarView() {
     }
 }
 
-// Intercept regular filter clicks to hide calendar
-const originalFilterTasks = filterTasks;
-window.filterTasks = function(status) {
-    if (status !== 'CALENDAR') {
-        document.getElementById('tasks-container').style.display = 'flex';
-        document.getElementById('calendar-container').style.display = 'none';
-        
-        // Fix active class logic
-        document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
-        const activeBtn = document.querySelector(`button[data-filter="${status}"]`);
-        if (activeBtn) activeBtn.classList.add('active');
-    }
-    
-    // Override the original to prevent event.currentTarget error
-    currentFilter = status;
-    
-    if (status === 'ALL') currentViewTitle.textContent = 'All Tasks';
-    else if (status === 'PENDING') currentViewTitle.textContent = 'Pending Tasks';
-    else if (status === 'IN_PROGRESS') currentViewTitle.textContent = 'In Progress Tasks';
-    else if (status === 'COMPLETED') currentViewTitle.textContent = 'Completed Tasks';
-    else if (status === 'CANCELLED') currentViewTitle.textContent = 'Cancelled Tasks';
-
-    renderTasks();
-};
 
 // --- Reminders ---
 let notifiedTaskIds = new Set();
