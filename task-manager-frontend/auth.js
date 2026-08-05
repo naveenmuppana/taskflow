@@ -34,9 +34,20 @@ const authError = document.getElementById('auth-error');
 // Tabs
 function switchAuthTab(tab) {
     currentAuthTab = tab;
-    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+    const inactiveClasses = ['text-slate-500', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-white'];
+    const activeClasses = ['active', 'bg-primary', 'dark:bg-primary-dark', 'text-white', 'shadow-sm'];
+
+    document.querySelectorAll('.tab').forEach(btn => {
+        btn.classList.remove(...activeClasses);
+        btn.classList.add(...inactiveClasses);
+    });
+    
     const activeBtn = Array.from(document.querySelectorAll('.tab')).find(btn => btn.textContent.toLowerCase().includes(tab));
-    if (activeBtn) activeBtn.classList.add('active');
+    if (activeBtn) {
+        activeBtn.classList.remove(...inactiveClasses);
+        activeBtn.classList.add(...activeClasses);
+    }
+    
     authSubmitBtn.textContent = tab === 'login' ? 'Login' : 'Register';
     authError.textContent = '';
 }
