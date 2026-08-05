@@ -14,6 +14,22 @@ function toggleTheme() {
     }
 }
 
+let activeApiRequests = 0;
+function showGlobalLoader() {
+    activeApiRequests++;
+    const loader = document.getElementById('global-loader');
+    if (loader) loader.classList.remove('opacity-0', 'pointer-events-none');
+}
+
+function hideGlobalLoader() {
+    activeApiRequests--;
+    if (activeApiRequests <= 0) {
+        activeApiRequests = 0;
+        const loader = document.getElementById('global-loader');
+        if (loader) loader.classList.add('opacity-0', 'pointer-events-none');
+    }
+}
+
 const API_URL = 'https://taskflow-cr3c.onrender.com/api/v1';
 
 // State & Auth Guard
@@ -498,17 +514,22 @@ async function refreshAccessToken() {
 }
 
 async function apiFetch(url, options = {}) {
-    const currentToken = localStorage.getItem('token');
-    const headers = { 'Authorization': `Bearer ${currentToken}`, ...options.headers };
-    const res = await fetch(url, { ...options, headers });
-    if (res.status === 401) {
-        const refreshed = await refreshAccessToken();
-        if (!refreshed) {
-            await logout();
-            return null;
+    showGlobalLoader();
+    try {
+        const currentToken = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${currentToken}`, ...options.headers };
+        const res = await fetch(url, { ...options, headers });
+        if (res.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (!refreshed) {
+                await logout();
+                return null;
+            }
         }
+        return res;
+    } finally {
+        hideGlobalLoader();
     }
-    return res;
 }
 
 // --- API Calls ---
@@ -773,7 +794,7 @@ function renderTasks() {
 
     filteredTasks.forEach(task => {
         const div = document.createElement('div');
-        div.className = 'task-item flex justify-between p-5 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all cursor-pointer group';
+        div.className = 'task-item flex justify-between p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group';
         
         const nextStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
         const icon = task.status === 'COMPLETED' ? '↺' : '✓';
@@ -884,7 +905,7 @@ function renderKanban() {
         if (!col) return;
 
         const div = document.createElement('div');
-        div.className = 'kanban-card p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer cursor-grab active:cursor-grabbing';
+        div.className = 'kanban-card p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer cursor-grab active:cursor-grabbing';
         div.dataset.id = task.id;
         
         let recurringHtml = task.is_recurring ? `<span title="Recurring Task (${task.recurrence_rule})">🔁</span> ` : '';

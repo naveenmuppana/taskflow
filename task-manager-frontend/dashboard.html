@@ -36,7 +36,7 @@
 
     <div class="dashboard-layout grid grid-cols-[240px_1fr] h-screen w-full relative z-10">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-sm">
+        <aside class="sidebar bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-sm">
             <div class="sidebar-brand px-6 py-5 border-b border-slate-200 dark:border-slate-800">
                 <h2 class="text-xl font-bold text-primary dark:text-primary-dark tracking-tight">TaskFlow</h2>
             </div>
@@ -78,7 +78,7 @@
         <main class="main-content flex flex-col h-screen overflow-hidden relative">
             
             <!-- Top Navbar -->
-            <header class="top-nav flex justify-between items-center px-8 py-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-sm z-20 sticky top-0">
+            <header class="top-nav flex justify-between items-center px-8 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-20 sticky top-0">
                 <h2 id="current-view-title" class="text-xl font-semibold text-slate-800 dark:text-slate-100">All Tasks</h2>
                 
                 <!-- Search Bar -->
@@ -88,8 +88,8 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <button class="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
-                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
                         <span class="w-6 h-6 rounded-full bg-primary dark:bg-primary-dark text-white flex items-center justify-center text-xs font-bold">👤</span>
                         <span id="user-email" class="text-sm font-medium text-slate-600 dark:text-slate-300">User</span>
                     </div>
@@ -98,54 +98,42 @@
             </header>
 
             <!-- Dashboard Stats -->
-            <div class="dashboard-stats grid grid-cols-1 md:grid-cols-4 gap-4 px-8 pt-6 pb-2">
-                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📋</div>
-                    <div>
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tasks</h3>
-                        <p id="stat-total" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
-                    </div>
+            <div class="dashboard-stats grid grid-cols-4 gap-6 p-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10">
+                <div class="stat-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-1 transition-transform hover:-translate-y-1 duration-300">
+                    <span class="text-3xl font-bold text-primary dark:text-primary-dark" id="stat-total">0</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Tasks</span>
                 </div>
-                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⏳</div>
-                    <div>
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pending</h3>
-                        <p id="stat-pending" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
-                    </div>
+                <div class="stat-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-1 transition-transform hover:-translate-y-1 duration-300">
+                    <span class="text-3xl font-bold text-slate-700 dark:text-slate-200" id="stat-pending">0</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Pending</span>
                 </div>
-                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">✅</div>
-                    <div>
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Completed</h3>
-                        <p id="stat-completed" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
-                    </div>
+                <div class="stat-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-1 transition-transform hover:-translate-y-1 duration-300">
+                    <span class="text-3xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-completed">0</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Completed</span>
                 </div>
-                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⚠️</div>
-                    <div>
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Overdue</h3>
-                        <p id="stat-overdue" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
-                    </div>
+                <div class="stat-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-1 transition-transform hover:-translate-y-1 duration-300">
+                    <span class="text-3xl font-bold text-rose-600 dark:text-rose-400" id="stat-overdue">0</span>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Overdue</span>
                 </div>
             </div>
 
             <!-- Toolbar -->
             <div class="toolbar flex justify-between items-center px-8 py-3 bg-transparent z-10 relative">
                 <div class="flex gap-3">
-                    <select id="filter-priority" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/40 dark:border-slate-700/50 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
+                    <select id="filter-priority" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
                         <option value="">All Priorities</option>
                         <option value="LOW">Low</option>
                         <option value="MEDIUM">Medium</option>
                         <option value="HIGH">High</option>
                         <option value="CRITICAL">Critical</option>
                     </select>
-                    <select id="filter-category" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/40 dark:border-slate-700/50 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
+                    <select id="filter-category" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
                         <option value="">All Categories</option>
                         <!-- Categories injected here -->
                     </select>
                 </div>
                 <div class="flex gap-3">
-                    <select id="sort-select" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/40 dark:border-slate-700/50 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
+                    <select id="sort-select" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="due_date">Due Date</option>
@@ -160,30 +148,30 @@
                 <div id="tasks-container" class="max-w-4xl mx-auto flex flex-col gap-3">
                     <!-- Tasks injected by JS -->
                 </div>
-                <div id="calendar-container" style="display: none; height: 100%; min-height: 500px; padding: 20px;" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-slate-700/50 shadow-lg"></div>
+                <div id="calendar-container" style="display: none; height: 100%; min-height: 500px; padding: 20px;" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm"></div>
                 
                 <!-- Kanban Container -->
                 <div id="kanban-container" style="display: none;" class="kanban-board flex gap-6 h-[calc(100vh-220px)] overflow-x-auto pb-4">
-                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="PENDING">
-                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
+                    <div class="kanban-column flex-none w-[320px] bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col border border-slate-200 dark:border-slate-800" data-status="PENDING">
+                        <div class="kanban-header p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-200">
                             <h3>Pending</h3>
                         </div>
                         <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-PENDING"></div>
                     </div>
-                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="IN_PROGRESS">
-                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
+                    <div class="kanban-column flex-none w-[320px] bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col border border-slate-200 dark:border-slate-800" data-status="IN_PROGRESS">
+                        <div class="kanban-header p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-200">
                             <h3>In Progress</h3>
                         </div>
                         <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-IN_PROGRESS"></div>
                     </div>
-                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="COMPLETED">
-                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
+                    <div class="kanban-column flex-none w-[320px] bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col border border-slate-200 dark:border-slate-800" data-status="COMPLETED">
+                        <div class="kanban-header p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-200">
                             <h3>Completed</h3>
                         </div>
                         <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-COMPLETED"></div>
                     </div>
-                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="CANCELLED">
-                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
+                    <div class="kanban-column flex-none w-[320px] bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col border border-slate-200 dark:border-slate-800" data-status="CANCELLED">
+                        <div class="kanban-header p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-200">
                             <h3>Cancelled</h3>
                         </div>
                         <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-CANCELLED"></div>
@@ -192,7 +180,7 @@
             </div>
 
             <!-- Floating Action Button (FAB) -->
-            <button class="fixed bottom-8 right-8 w-14 h-14 bg-primary dark:bg-primary-dark hover:bg-primary-hover dark:hover:bg-primary-darkhover text-white rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(30,58,95,0.4)] hover:shadow-[0_8px_24px_rgba(30,58,95,0.5)] hover:scale-110 transition-all duration-300 z-50" onclick="openModal()" title="Add New Task">
+            <button class="fixed bottom-8 right-8 w-14 h-14 bg-primary dark:bg-primary-dark hover:bg-primary-hover dark:hover:bg-primary-darkhover text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300 z-50" onclick="openModal()" title="Add New Task">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             </button>
 
@@ -200,8 +188,8 @@
     </div>
 
     <!-- Create/Edit Task Modal -->
-    <div id="task-modal" class="modal-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
-        <div class="modal-content bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl w-full max-w-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-all duration-300">
+    <div id="task-modal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
+        <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
                 <h3 id="modal-title" class="text-xl font-bold text-primary dark:text-primary-dark">Create New Task</h3>
                 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" onclick="closeModal('task-modal')">✕</button>
@@ -289,15 +277,15 @@
 
                 <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-200 dark:border-slate-700">
                     <button type="button" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover dark:bg-primary-dark dark:hover:bg-primary-darkhover text-white font-medium shadow-[0_4px_12px_rgba(30,58,95,0.3)] transition-all">Save Task</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover dark:bg-primary-dark dark:hover:bg-primary-darkhover text-white font-medium shadow-lg transition-all">Save Task</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Manage Categories Modal -->
-    <div id="category-modal" class="modal-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
-        <div class="modal-content bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-all duration-300">
+    <div id="category-modal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
+        <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-lg p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-primary dark:text-primary-dark">Manage Categories</h3>
                 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" onclick="closeCategoryModal()">✕</button>
@@ -326,8 +314,8 @@
     </div>
 
     <!-- Manage Tags Modal -->
-    <div id="tag-modal" class="modal-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
-        <div class="modal-content bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-all duration-300">
+    <div id="tag-modal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
+        <div class="modal-content bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-lg p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-primary dark:text-primary-dark">Manage Tags</h3>
                 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" onclick="closeTagModal()">✕</button>
@@ -356,10 +344,18 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="toast fixed bottom-6 right-6 px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-sm shadow-xl transform translate-y-[150%] opacity-0 transition-all duration-300 z-[300]"></div>
+    <div id="toast" class="toast fixed bottom-5 right-5 px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg text-sm font-semibold z-[300] transform translate-y-[100px] opacity-0 transition-all duration-300"></div>
+
+    <!-- Global API Loader -->
+    <div id="global-loader" class="fixed top-6 right-1/2 translate-x-1/2 z-[999] opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg rounded-full px-4 py-2 flex items-center gap-3">
+            <div class="w-4 h-4 border-2 border-primary/30 dark:border-primary-dark/30 border-t-primary dark:border-t-primary-dark rounded-full animate-spin"></div>
+            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Syncing...</span>
+        </div>
+    </div>
 
     <!-- Focus Mode Modal -->
-    <div id="focus-modal" class="modal-overlay focus-overlay fixed inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[1000] opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-center items-center gap-10">
+    <div id="focus-modal" class="modal-overlay focus-overlay fixed inset-0 bg-white dark:bg-slate-900 z-[1000] opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-center items-center gap-10">
         <button type="button" class="absolute top-8 right-8 w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="closeFocusMode()">✕</button>
         <h2 id="focus-task-title" class="text-4xl font-bold text-primary dark:text-primary-dark tracking-tight">Task Title</h2>
         <div class="text-[8rem] font-bold text-primary dark:text-primary-dark tracking-tighter" id="focus-timer">25:00</div>
