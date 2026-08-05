@@ -7,124 +7,145 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              primary: { DEFAULT: '#1E3A5F', hover: '#152A45', dark: '#3B82F6', darkhover: '#60A5FA' },
+              secondary: { DEFAULT: '#0F766E', dark: '#14B8A6' },
+              accent: { DEFAULT: '#1B5E20', dark: '#4ADE80' },
+              danger: { DEFAULT: '#991B1B', dark: '#EF4444' },
+              brandbg: { light: '#F8F6F2', dark: '#0F172A' }
+            }
+          }
+        }
+      }
+    </script>
 </head>
-<body class="dashboard-page">
+<body class="dashboard-page bg-brandbg-light dark:bg-brandbg-dark text-slate-900 dark:text-slate-100 font-sans min-h-screen overflow-hidden transition-colors duration-300">
     <div class="animated-bg"></div>
 
-    <div class="dashboard-layout">
+    <div class="dashboard-layout grid grid-cols-[240px_1fr] h-screen w-full relative z-10">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar glass-card">
-            <div class="sidebar-brand">
-                <h2>TaskFlow</h2>
+        <aside class="sidebar bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-sm">
+            <div class="sidebar-brand px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+                <h2 class="text-xl font-bold text-primary dark:text-primary-dark tracking-tight">TaskFlow</h2>
             </div>
             
-            <nav class="sidebar-nav">
-                <p class="nav-label">VIEWS</p>
-                <button class="nav-btn active" data-filter="ALL" onclick="filterTasks('ALL')">
-                    <span class="icon">⊞</span> All Tasks
+            <nav class="sidebar-nav p-4 flex flex-col gap-1.5 flex-1 overflow-y-auto">
+                <p class="nav-label text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2 mb-1 ml-2">VIEWS</p>
+                <button class="nav-btn active flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="ALL" onclick="filterTasks('ALL')">
+                    <span class="icon text-lg opacity-70">⊞</span> All Tasks
                 </button>
-                <button class="nav-btn" data-filter="PENDING" onclick="filterTasks('PENDING')">
-                    <span class="icon">○</span> Pending
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="PENDING" onclick="filterTasks('PENDING')">
+                    <span class="icon text-lg opacity-70">○</span> Pending
                 </button>
-                <button class="nav-btn" data-filter="IN_PROGRESS" onclick="filterTasks('IN_PROGRESS')">
-                    <span class="icon">◐</span> In Progress
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="IN_PROGRESS" onclick="filterTasks('IN_PROGRESS')">
+                    <span class="icon text-lg opacity-70">◐</span> In Progress
                 </button>
-                <button class="nav-btn" data-filter="COMPLETED" onclick="filterTasks('COMPLETED')">
-                    <span class="icon">●</span> Completed
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="COMPLETED" onclick="filterTasks('COMPLETED')">
+                    <span class="icon text-lg opacity-70">●</span> Completed
                 </button>
-                <button class="nav-btn" data-filter="CANCELLED" onclick="filterTasks('CANCELLED')">
-                    <span class="icon">✕</span> Cancelled
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="CANCELLED" onclick="filterTasks('CANCELLED')">
+                    <span class="icon text-lg opacity-70">✕</span> Cancelled
                 </button>
-                <button class="nav-btn" data-filter="CALENDAR" onclick="toggleCalendarView()">
-                    <span class="icon">📅</span> Calendar
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="CALENDAR" onclick="toggleCalendarView()">
+                    <span class="icon text-lg opacity-70">📅</span> Calendar
                 </button>
-                <button class="nav-btn" data-filter="KANBAN" onclick="toggleKanbanView()">
-                    <span class="icon">📋</span> Kanban Board
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" data-filter="KANBAN" onclick="toggleKanbanView()">
+                    <span class="icon text-lg opacity-70">📋</span> Kanban Board
                 </button>
-                <div class="nav-divider"></div>
-                <button class="nav-btn" onclick="openCategoryModal()">
-                    <span class="icon">🏷️</span> Manage Categories
+                <div class="h-px bg-slate-200 dark:bg-slate-800 my-2"></div>
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" onclick="openCategoryModal()">
+                    <span class="icon text-lg opacity-70">🏷️</span> Manage Categories
                 </button>
-                <button class="nav-btn" onclick="openTagModal()">
-                    <span class="icon">🔖</span> Manage Tags
+                <button class="nav-btn flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" onclick="openTagModal()">
+                    <span class="icon text-lg opacity-70">🔖</span> Manage Tags
                 </button>
             </nav>
         </aside>
 
         <!-- Main Content Area -->
-        <main class="main-content">
+        <main class="main-content flex flex-col h-screen overflow-hidden relative">
             
             <!-- Top Navbar -->
-            <header class="top-nav glass-header">
-                <h2 id="current-view-title">All Tasks</h2>
+            <header class="top-nav flex justify-between items-center px-8 py-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 shadow-sm z-20 sticky top-0">
+                <h2 id="current-view-title" class="text-xl font-semibold text-slate-800 dark:text-slate-100">All Tasks</h2>
                 
                 <!-- Search Bar -->
-                <div class="search-container">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Search tasks..." oninput="handleSearch(event)">
+                <div class="relative w-[300px]">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                    <input type="text" id="search-input" placeholder="Search tasks..." class="w-full pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/30 dark:focus:ring-primary-dark/50 transition-all text-slate-800 dark:text-slate-100 placeholder:text-slate-400 outline-none" oninput="handleSearch(event)">
                 </div>
 
-                <div class="user-profile">
-                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
-                    <span class="avatar">👤</span>
-                    <span id="user-email">User</span>
-                    <button class="btn-outline btn-sm" onclick="logout()">Logout</button>
+                <div class="flex items-center gap-4">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm" onclick="toggleTheme()" title="Toggle Theme">🌓</button>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <span class="w-6 h-6 rounded-full bg-primary dark:bg-primary-dark text-white flex items-center justify-center text-xs font-bold">👤</span>
+                        <span id="user-email" class="text-sm font-medium text-slate-600 dark:text-slate-300">User</span>
+                    </div>
+                    <button class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 shadow-sm" onclick="logout()">Logout</button>
                 </div>
             </header>
 
             <!-- Dashboard Stats -->
-            <div class="dashboard-stats">
-                <div class="stat-card total-card">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-info">
-                        <h3>Total Tasks</h3>
-                        <p id="stat-total">0</p>
+            <div class="dashboard-stats grid grid-cols-1 md:grid-cols-4 gap-4 px-8 pt-6 pb-2">
+                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📋</div>
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tasks</h3>
+                        <p id="stat-total" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
                     </div>
                 </div>
-                <div class="stat-card pending-card">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-info">
-                        <h3>Pending</h3>
-                        <p id="stat-pending">0</p>
+                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⏳</div>
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pending</h3>
+                        <p id="stat-pending" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
                     </div>
                 </div>
-                <div class="stat-card completed-card">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-info">
-                        <h3>Completed</h3>
-                        <p id="stat-completed">0</p>
+                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">✅</div>
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Completed</h3>
+                        <p id="stat-completed" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
                     </div>
                 </div>
-                <div class="stat-card overdue-card">
-                    <div class="stat-icon">⚠️</div>
-                    <div class="stat-info">
-                        <h3>Overdue</h3>
-                        <p id="stat-overdue">0</p>
+                <div class="stat-card flex items-center gap-4 p-5 rounded-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⚠️</div>
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Overdue</h3>
+                        <p id="stat-overdue" class="text-2xl font-bold text-slate-800 dark:text-slate-100">0</p>
                     </div>
                 </div>
             </div>
 
             <!-- Toolbar -->
-            <div class="toolbar">
-                <div class="filters">
-                    <select id="filter-priority" onchange="applyFilters()">
+            <div class="toolbar flex justify-between items-center px-8 py-3 bg-transparent z-10 relative">
+                <div class="flex gap-3">
+                    <select id="filter-priority" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/40 dark:border-slate-700/50 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
                         <option value="">All Priorities</option>
                         <option value="LOW">Low</option>
                         <option value="MEDIUM">Medium</option>
                         <option value="HIGH">High</option>
                         <option value="CRITICAL">Critical</option>
                     </select>
-                    <select id="filter-category" onchange="applyFilters()">
+                    <select id="filter-category" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/40 dark:border-slate-700/50 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
                         <option value="">All Categories</option>
                         <!-- Categories injected here -->
                     </select>
                 </div>
-                <div class="sorting">
-                    <select id="sort-select" onchange="applyFilters()">
+                <div class="flex gap-3">
+                    <select id="sort-select" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 backdrop-blur border border-white/40 dark:border-slate-700/50 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-primary/30">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="due_date">Due Date</option>
@@ -135,43 +156,43 @@
             </div>
 
             <!-- Tasks Container -->
-            <div class="tasks-scroll-area" id="main-scroll-area">
-                <div id="tasks-container">
+            <div class="tasks-scroll-area flex-1 overflow-y-auto px-8 pb-24 relative z-10" id="main-scroll-area">
+                <div id="tasks-container" class="max-w-4xl mx-auto flex flex-col gap-3">
                     <!-- Tasks injected by JS -->
                 </div>
-                <div id="calendar-container" style="display: none; height: 100%; min-height: 500px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px;"></div>
+                <div id="calendar-container" style="display: none; height: 100%; min-height: 500px; padding: 20px;" class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-slate-700/50 shadow-lg"></div>
                 
                 <!-- Kanban Container -->
-                <div id="kanban-container" style="display: none;" class="kanban-board">
-                    <div class="kanban-column" data-status="PENDING">
-                        <div class="kanban-header">
+                <div id="kanban-container" style="display: none;" class="kanban-board flex gap-6 h-[calc(100vh-220px)] overflow-x-auto pb-4">
+                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="PENDING">
+                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
                             <h3>Pending</h3>
                         </div>
-                        <div class="kanban-tasks" id="kanban-PENDING"></div>
+                        <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-PENDING"></div>
                     </div>
-                    <div class="kanban-column" data-status="IN_PROGRESS">
-                        <div class="kanban-header">
+                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="IN_PROGRESS">
+                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
                             <h3>In Progress</h3>
                         </div>
-                        <div class="kanban-tasks" id="kanban-IN_PROGRESS"></div>
+                        <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-IN_PROGRESS"></div>
                     </div>
-                    <div class="kanban-column" data-status="COMPLETED">
-                        <div class="kanban-header">
+                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="COMPLETED">
+                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
                             <h3>Completed</h3>
                         </div>
-                        <div class="kanban-tasks" id="kanban-COMPLETED"></div>
+                        <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-COMPLETED"></div>
                     </div>
-                    <div class="kanban-column" data-status="CANCELLED">
-                        <div class="kanban-header">
+                    <div class="kanban-column flex-none w-[320px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-2xl flex flex-col border border-white/50 dark:border-slate-700/50 shadow-sm" data-status="CANCELLED">
+                        <div class="kanban-header p-4 border-b border-white/50 dark:border-slate-700/50 font-bold text-slate-700 dark:text-slate-200">
                             <h3>Cancelled</h3>
                         </div>
-                        <div class="kanban-tasks" id="kanban-CANCELLED"></div>
+                        <div class="kanban-tasks flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="kanban-CANCELLED"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Floating Action Button (FAB) -->
-            <button class="fab" onclick="openModal()" title="Add New Task">
+            <button class="fixed bottom-8 right-8 w-14 h-14 bg-primary dark:bg-primary-dark hover:bg-primary-hover dark:hover:bg-primary-darkhover text-white rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(30,58,95,0.4)] hover:shadow-[0_8px_24px_rgba(30,58,95,0.5)] hover:scale-110 transition-all duration-300 z-50" onclick="openModal()" title="Add New Task">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             </button>
 
@@ -179,58 +200,59 @@
     </div>
 
     <!-- Create/Edit Task Modal -->
-    <div id="task-modal" class="modal-overlay">
-        <div class="glass-card modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Create New Task</h3>
-                <button class="btn-icon close-modal" onclick="closeModal('task-modal')">✕</button>
+    <div id="task-modal" class="modal-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
+        <div class="modal-content bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl w-full max-w-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-primary dark:text-primary-dark">Create New Task</h3>
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" onclick="closeModal('task-modal')">✕</button>
             </div>
+            
             <form id="task-form" onsubmit="saveTask(event)">
                 <input type="hidden" id="task-id">
-                <div class="input-group">
-                    <label for="task-title">Title</label>
-                    <input type="text" id="task-title" required placeholder="What needs to be done?">
+                <div class="mb-4">
+                    <label for="task-title" class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Title</label>
+                    <input type="text" id="task-title" required placeholder="What needs to be done?" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all dark:text-white">
                 </div>
-                <div class="input-group">
-                    <label for="task-desc">Description (Optional)</label>
-                    <textarea id="task-desc" placeholder="Add some details..." rows="3"></textarea>
+                <div class="mb-4">
+                    <label for="task-desc" class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Description (Optional)</label>
+                    <textarea id="task-desc" placeholder="Add some details..." rows="3" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all dark:text-white"></textarea>
                 </div>
-                <div class="input-row">
-                    <div class="input-group" style="min-width: 100px;">
-                        <label for="task-priority">Priority</label>
-                        <select id="task-priority">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div class="flex flex-col">
+                        <label for="task-priority" class="text-xs font-bold text-slate-500 mb-1.5 uppercase">Priority</label>
+                        <select id="task-priority" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                             <option value="LOW">Low</option>
                             <option value="MEDIUM" selected>Medium</option>
                             <option value="HIGH">High</option>
                             <option value="CRITICAL">Critical</option>
                         </select>
                     </div>
-                    <div class="input-group" style="min-width: 120px;">
-                        <label for="task-status">Status</label>
-                        <select id="task-status">
+                    <div class="flex flex-col">
+                        <label for="task-status" class="text-xs font-bold text-slate-500 mb-1.5 uppercase">Status</label>
+                        <select id="task-status" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                             <option value="PENDING">Pending</option>
                             <option value="IN_PROGRESS">In Progress</option>
                             <option value="COMPLETED">Completed</option>
                             <option value="CANCELLED">Cancelled</option>
                         </select>
                     </div>
-                    <div class="input-group" style="min-width: 150px;">
-                        <label for="task-due-date">Due Date (Optional)</label>
-                        <input type="datetime-local" id="task-due-date">
+                    <div class="flex flex-col">
+                        <label for="task-due-date" class="text-xs font-bold text-slate-500 mb-1.5 uppercase">Due Date</label>
+                        <input type="datetime-local" id="task-due-date" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                     </div>
-                    <div class="input-group" style="min-width: 150px;">
-                        <label for="task-remind-at">Remind At (Optional)</label>
-                        <input type="datetime-local" id="task-remind-at">
+                    <div class="flex flex-col">
+                        <label for="task-remind-at" class="text-xs font-bold text-slate-500 mb-1.5 uppercase">Remind At</label>
+                        <input type="datetime-local" id="task-remind-at" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                     </div>
                 </div>
-                <div class="input-row">
-                    <div class="input-group" style="flex: 1; align-items: center; flex-direction: row; gap: 8px; margin-top: 25px;">
-                        <input type="checkbox" id="task-is-recurring" style="width: auto; margin: 0;">
-                        <label for="task-is-recurring" style="margin: 0; cursor: pointer;">Is Recurring?</label>
+                <div class="flex gap-4 items-center mt-6 mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="task-is-recurring" class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary">
+                        <label for="task-is-recurring" class="font-bold text-sm cursor-pointer text-slate-600 dark:text-slate-300">Is Recurring?</label>
                     </div>
-                    <div class="input-group" id="recurrence-rule-group" style="flex: 2; display: none;">
-                        <label for="task-recurrence-rule">Recurrence Pattern</label>
-                        <select id="task-recurrence-rule">
+                    <div id="recurrence-rule-group" style="display: none;" class="flex-1 ml-4 border-l border-slate-200 dark:border-slate-700 pl-4">
+                        <label for="task-recurrence-rule" class="sr-only">Recurrence Pattern</label>
+                        <select id="task-recurrence-rule" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                             <option value="daily">Daily</option>
                             <option value="weekly">Weekly</option>
                             <option value="monthly">Monthly</option>
@@ -238,127 +260,112 @@
                         </select>
                     </div>
                 </div>
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="task-category">Category (Optional)</label>
-                        <select id="task-category">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="flex flex-col">
+                        <label for="task-category" class="text-xs font-bold text-slate-500 mb-1.5 uppercase">Category (Optional)</label>
+                        <select id="task-category" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                             <option value="">None</option>
                             <!-- Categories injected here -->
                         </select>
                     </div>
-                    <div class="input-group">
-                        <label for="task-tags">Tags (Optional)</label>
-                        <select id="task-tags" multiple style="height: auto; min-height: 42px;">
+                    <div class="flex flex-col">
+                        <label for="task-tags" class="text-xs font-bold text-slate-500 mb-1.5 uppercase">Tags (Optional)</label>
+                        <select id="task-tags" multiple class="h-24 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none dark:text-white">
                             <!-- Tags injected here -->
                         </select>
                     </div>
                 </div>
                 
-                <div id="subtasks-section" style="display: none; margin-bottom: 1rem;">
-                    <h4>Subtasks</h4>
-                    <div id="subtasks-list" style="margin-bottom: 0.5rem; max-height: 150px; overflow-y: auto;">
+                <div id="subtasks-section" style="display: none; margin-bottom: 1.5rem;" class="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <h4 class="font-bold text-slate-700 dark:text-slate-200 mb-3 text-sm uppercase">Subtasks</h4>
+                    <div id="subtasks-list" class="flex flex-col gap-2 max-h-[150px] overflow-y-auto mb-3">
                         <!-- Subtasks injected here -->
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="new-subtask-title" placeholder="New subtask..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
-                        <button type="button" class="btn-outline btn-sm" onclick="addSubtask()">Add</button>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-subtask-title" placeholder="New subtask..." class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none dark:text-white text-sm">
+                        <button type="button" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors text-sm" onclick="addSubtask()">Add</button>
                     </div>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Task</button>
+                <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <button type="button" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover dark:bg-primary-dark dark:hover:bg-primary-darkhover text-white font-medium shadow-[0_4px_12px_rgba(30,58,95,0.3)] transition-all">Save Task</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Manage Categories Modal -->
-    <div id="category-modal" class="modal-overlay">
-        <div class="glass-card modal-content">
-            <div class="modal-header">
-                <h3>Manage Categories</h3>
-                <button class="btn-icon close-modal" onclick="closeCategoryModal()">✕</button>
+    <div id="category-modal" class="modal-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
+        <div class="modal-content bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary dark:text-primary-dark">Manage Categories</h3>
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" onclick="closeCategoryModal()">✕</button>
             </div>
             
-            <form id="category-form" onsubmit="saveCategory(event)" style="margin-bottom: 20px;">
-                <div class="input-row" style="align-items: center; flex-wrap: wrap;">
-                    <div class="input-group" style="flex: 1; min-width: 180px; margin-bottom: 8px;">
-                        <input type="text" id="new-category-name" required placeholder="New Category Name">
-                    </div>
-                    <div class="color-swatches" id="category-color-swatches" style="margin-bottom: 8px;">
-                        <button type="button" class="swatch active" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></button>
-                        <button type="button" class="swatch" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></button>
-                        <button type="button" class="swatch" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
-                        <button type="button" class="swatch" data-color="#10b981" style="background: #10b981;" title="Green"></button>
-                        <button type="button" class="swatch" data-color="#f59e0b" style="background: #f59e0b;" title="Amber"></button>
-                        <button type="button" class="swatch" data-color="#f43f5e" style="background: #f43f5e;" title="Rose"></button>
-                        <button type="button" class="swatch" data-color="#f97316" style="background: #f97316;" title="Orange"></button>
-                        <button type="button" class="swatch" data-color="#64748b" style="background: #64748b;" title="Slate"></button>
+            <form id="category-form" onsubmit="saveCategory(event)" class="mb-6 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <input type="text" id="new-category-name" required placeholder="New Category Name" class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                    <div class="color-swatches flex gap-1.5" id="category-color-swatches">
+                        <button type="button" class="w-6 h-6 rounded-md active ring-2 ring-offset-1 ring-purple-500" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#10b981" style="background: #10b981;" title="Green"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#f59e0b" style="background: #f59e0b;" title="Amber"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#f43f5e" style="background: #f43f5e;" title="Rose"></button>
                     </div>
                     <input type="hidden" id="new-category-color" value="#8b5cf6">
-                    <button type="submit" class="btn-primary" style="margin-bottom: 8px;">Add</button>
+                    <button type="submit" class="px-4 py-2 bg-primary dark:bg-primary-dark text-white rounded-lg shadow-md font-medium text-sm">Add</button>
                 </div>
             </form>
 
-            <div class="categories-list-container" style="max-height: 200px; overflow-y: auto;">
-                <ul id="categories-list" class="styled-list">
-                    <!-- Categories injected here -->
-                </ul>
-            </div>
+            <ul id="categories-list" class="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2">
+                <!-- Categories injected here -->
+            </ul>
         </div>
     </div>
 
     <!-- Manage Tags Modal -->
-    <div id="tag-modal" class="modal-overlay">
-        <div class="glass-card modal-content">
-            <div class="modal-header">
-                <h3>Manage Tags</h3>
-                <button class="btn-icon close-modal" onclick="closeTagModal()">✕</button>
+    <div id="tag-modal" class="modal-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[200] opacity-0 pointer-events-none transition-opacity duration-300 flex justify-center items-center">
+        <div class="modal-content bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary dark:text-primary-dark">Manage Tags</h3>
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" onclick="closeTagModal()">✕</button>
             </div>
             
-            <form id="tag-form" onsubmit="saveTag(event)" style="margin-bottom: 20px;">
-                <div class="input-row" style="align-items: center; flex-wrap: wrap;">
-                    <div class="input-group" style="flex: 1; min-width: 180px; margin-bottom: 8px;">
-                        <input type="text" id="new-tag-name" required placeholder="New Tag Name">
-                    </div>
-                    <div class="color-swatches" id="tag-color-swatches" style="margin-bottom: 8px;">
-                        <button type="button" class="swatch active" data-color="#10b981" style="background: #10b981;" title="Green"></button>
-                        <button type="button" class="swatch" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></button>
-                        <button type="button" class="swatch" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
-                        <button type="button" class="swatch" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></button>
-                        <button type="button" class="swatch" data-color="#f59e0b" style="background: #f59e0b;" title="Amber"></button>
-                        <button type="button" class="swatch" data-color="#f43f5e" style="background: #f43f5e;" title="Rose"></button>
-                        <button type="button" class="swatch" data-color="#f97316" style="background: #f97316;" title="Orange"></button>
-                        <button type="button" class="swatch" data-color="#64748b" style="background: #64748b;" title="Slate"></button>
+            <form id="tag-form" onsubmit="saveTag(event)" class="mb-6 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <input type="text" id="new-tag-name" required placeholder="New Tag Name" class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                    <div class="color-swatches flex gap-1.5" id="tag-color-swatches">
+                        <button type="button" class="w-6 h-6 rounded-md active ring-2 ring-offset-1 ring-green-500" data-color="#10b981" style="background: #10b981;" title="Green"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#3b82f6" style="background: #3b82f6;" title="Blue"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#8b5cf6" style="background: #8b5cf6;" title="Purple"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#f59e0b" style="background: #f59e0b;" title="Amber"></button>
+                        <button type="button" class="w-6 h-6 rounded-md" data-color="#f43f5e" style="background: #f43f5e;" title="Rose"></button>
                     </div>
                     <input type="hidden" id="new-tag-color" value="#10b981">
-                    <button type="submit" class="btn-primary" style="margin-bottom: 8px;">Add</button>
+                    <button type="submit" class="px-4 py-2 bg-primary dark:bg-primary-dark text-white rounded-lg shadow-md font-medium text-sm">Add</button>
                 </div>
             </form>
 
-            <div class="tags-list-container" style="max-height: 200px; overflow-y: auto;">
-                <ul id="tags-list" class="styled-list">
-                    <!-- Tags injected here -->
-                </ul>
-            </div>
+            <ul id="tags-list" class="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2">
+                <!-- Tags injected here -->
+            </ul>
         </div>
     </div>
 
-
     <!-- Notification Toast -->
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast fixed bottom-6 right-6 px-5 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-sm shadow-xl transform translate-y-[150%] opacity-0 transition-all duration-300 z-[300]"></div>
 
     <!-- Focus Mode Modal -->
-    <div id="focus-modal" class="modal-overlay focus-overlay">
-        <div class="focus-content" style="position: relative;">
-            <button type="button" class="btn-icon close-modal" style="position: absolute; top: 15px; right: 15px;" onclick="closeFocusMode()">✕</button>
-            <h2 id="focus-task-title">Task Title</h2>
-            <div class="timer-display" id="focus-timer">25:00</div>
-            <div class="focus-controls">
-                <button class="btn-icon focus-btn" id="focus-play-btn" onclick="toggleFocusTimer()">▶</button>
-                <button class="btn-icon focus-btn stop" onclick="closeFocusMode()">⏹</button>
-            </div>
+    <div id="focus-modal" class="modal-overlay focus-overlay fixed inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl z-[1000] opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-center items-center gap-10">
+        <button type="button" class="absolute top-8 right-8 w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="closeFocusMode()">✕</button>
+        <h2 id="focus-task-title" class="text-4xl font-bold text-primary dark:text-primary-dark tracking-tight">Task Title</h2>
+        <div class="text-[8rem] font-bold text-primary dark:text-primary-dark tracking-tighter" id="focus-timer">25:00</div>
+        <div class="flex gap-6">
+            <button class="w-20 h-20 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-3xl hover:bg-primary hover:text-white transition-colors shadow-lg hover:scale-105" id="focus-play-btn" onclick="toggleFocusTimer()">▶</button>
+            <button class="w-20 h-20 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-3xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors shadow-lg hover:scale-105 stop" onclick="closeFocusMode()">⏹</button>
         </div>
     </div>
 
@@ -375,5 +382,26 @@
     </div>
 
     <script src="dashboard.js"></script>
+    <script>
+        // Inline script to add active classes to nav links natively
+        const navBtns = document.querySelectorAll('.sidebar-nav .nav-btn');
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                navBtns.forEach(b => {
+                    b.classList.remove('bg-white', 'dark:bg-slate-800', 'shadow-sm', 'text-primary', 'dark:text-primary-dark');
+                    b.classList.add('hover:bg-slate-100', 'dark:hover:bg-slate-800');
+                });
+                this.classList.add('bg-white', 'dark:bg-slate-800', 'shadow-sm', 'text-primary', 'dark:text-primary-dark');
+                this.classList.remove('hover:bg-slate-100', 'dark:hover:bg-slate-800');
+            });
+        });
+        
+        // Initial setup for default active button
+        const activeNavBtn = document.querySelector('.sidebar-nav .nav-btn.active');
+        if (activeNavBtn) {
+            activeNavBtn.classList.add('bg-white', 'dark:bg-slate-800', 'shadow-sm', 'text-primary', 'dark:text-primary-dark');
+            activeNavBtn.classList.remove('hover:bg-slate-100', 'dark:hover:bg-slate-800');
+        }
+    </script>
 </body>
 </html>

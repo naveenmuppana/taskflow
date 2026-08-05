@@ -122,7 +122,7 @@ function setLoading(btn, isLoading, originalText = '') {
     if (isLoading) {
         btn.disabled = true;
         btn.classList.add('loading');
-        btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;margin-right:6px;border-width:2px;display:inline-block;vertical-align:middle;"></span> <span style="vertical-align:middle;">Processing...</span>`;
+        btn.innerHTML = `<span class="spinner w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5 inline-block align-middle"></span> <span class="align-middle">Processing...</span>`;
     } else {
         btn.disabled = false;
         btn.classList.remove('loading');
@@ -318,9 +318,9 @@ async function fetchCategories() {
         // Populate manage modal
         const list = document.getElementById('categories-list');
         list.innerHTML = categories.map(c => `
-            <li>
-                <div><span class="item-color-indicator" style="background:${c.color}"></span> ${escapeHtml(c.name)}</div>
-                <button class="btn-icon delete" onclick="deleteCategory(${c.id})" title="Delete">✕</button>
+            <li class="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg group">
+                <div class="flex items-center gap-3"><span class="item-color-indicator w-3 h-3 rounded-full" style="background:${c.color}"></span> <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${escapeHtml(c.name)}</span></div>
+                <button class="btn-icon delete w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors opacity-0 group-hover:opacity-100" onclick="deleteCategory(${c.id})" title="Delete">✕</button>
             </li>
         `).join('');
     } catch (err) {
@@ -399,9 +399,9 @@ async function fetchTags() {
         // Populate manage modal
         const list = document.getElementById('tags-list');
         list.innerHTML = tags.map(t => `
-            <li>
-                <div><span class="item-color-indicator" style="background:${t.color}"></span> ${escapeHtml(t.name)}</div>
-                <button class="btn-icon delete" onclick="deleteTag(${t.id})" title="Delete">✕</button>
+            <li class="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg group">
+                <div class="flex items-center gap-3"><span class="item-color-indicator w-3 h-3 rounded-full" style="background:${t.color}"></span> <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${escapeHtml(t.name)}</span></div>
+                <button class="btn-icon delete w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors opacity-0 group-hover:opacity-100" onclick="deleteTag(${t.id})" title="Delete">✕</button>
             </li>
         `).join('');
     } catch (err) {
@@ -650,10 +650,12 @@ function renderSubtasks(task) {
     const subtasks = task.subtasks || [];
     
     list.innerHTML = subtasks.map(st => `
-        <div class="subtask-item ${st.is_completed ? 'completed' : ''}">
-            <input type="checkbox" ${st.is_completed ? 'checked' : ''} onchange="toggleSubtask(${st.id}, ${!st.is_completed})">
-            <span>${escapeHtml(st.title)}</span>
-            <button type="button" class="btn-icon delete" style="width:24px;height:24px" onclick="deleteSubtask(${st.id})">✕</button>
+        <div class="subtask-item flex items-center justify-between p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors group ${st.is_completed ? 'opacity-60 line-through' : ''}">
+            <div class="flex items-center gap-3">
+                <input type="checkbox" class="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary cursor-pointer" ${st.is_completed ? 'checked' : ''} onchange="toggleSubtask(${st.id}, ${!st.is_completed})">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${escapeHtml(st.title)}</span>
+            </div>
+            <button type="button" class="btn-icon delete w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors opacity-0 group-hover:opacity-100" onclick="deleteSubtask(${st.id})">✕</button>
         </div>
     `).join('');
 }
@@ -760,10 +762,10 @@ function renderTasks() {
 
     if (filteredTasks.length === 0) {
         tasksContainer.innerHTML = `
-            <div class="empty-state">
+            <div class="empty-state flex flex-col items-center justify-center py-20 text-center">
                 <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">${currentSearchTerm ? '🔍' : '📭'}</div>
-                <h3>${currentSearchTerm ? 'No tasks match your search' : 'No tasks found'}</h3>
-                <p>${currentSearchTerm ? 'Try adjusting your keywords.' : 'Click the + button in the corner to create one.'}</p>
+                <h3 class="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">${currentSearchTerm ? 'No tasks match your search' : 'No tasks found'}</h3>
+                <p class="text-slate-500 dark:text-slate-400">${currentSearchTerm ? 'Try adjusting your keywords.' : 'Click the + button in the corner to create one.'}</p>
             </div>
         `;
         return;
@@ -771,7 +773,7 @@ function renderTasks() {
 
     filteredTasks.forEach(task => {
         const div = document.createElement('div');
-        div.className = 'task-item';
+        div.className = 'task-item flex justify-between p-5 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all cursor-pointer group';
         
         const nextStatus = task.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
         const icon = task.status === 'COMPLETED' ? '↺' : '✓';
@@ -792,10 +794,10 @@ function renderTasks() {
             let dateText = dueDate.toLocaleDateString();
             
             if (isOverdue) {
-                dateClass = 'overdue';
+                dateClass = 'text-rose-500 font-bold';
                 dateText = `Overdue by ${Math.abs(diffDays)} days`;
             } else if (isSoon) {
-                dateClass = 'soon';
+                dateClass = 'text-amber-500 font-bold';
                 dateText = `Due in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
             }
             
@@ -804,12 +806,12 @@ function renderTasks() {
         
         let categoryHtml = '';
         if (task.category) {
-            categoryHtml = `<span class="badge task-category" style="border-color:${task.category.color}; color:${task.category.color}">${escapeHtml(task.category.name)}</span>`;
+            categoryHtml = `<span class="badge task-category px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-slate-900 border" style="border-color:${task.category.color}; color:${task.category.color}">${escapeHtml(task.category.name)}</span>`;
         }
         
         let tagsHtml = '';
         if (task.tags && task.tags.length > 0) {
-            tagsHtml = task.tags.map(t => `<span class="badge task-tag" style="border-color:${t.color}; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ');
+            tagsHtml = task.tags.map(t => `<span class="badge task-tag px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-slate-900 border" style="border-color:${t.color}; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ');
         }
         
         let recurringHtml = '';
@@ -818,28 +820,28 @@ function renderTasks() {
         }
 
         div.innerHTML = `
-            <div class="task-content" style="${opacityStyle}">
-                <div class="task-title" style="${lineStyle}">${recurringHtml}${escapeHtml(task.title)}</div>
-                ${task.description ? `<div class="task-desc">${escapeHtml(task.description)}</div>` : ''}
+            <div class="task-content flex-1 pr-4" style="${opacityStyle}">
+                <div class="task-title text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1" style="${lineStyle}">${recurringHtml}${escapeHtml(task.title)}</div>
+                ${task.description ? `<div class="task-desc text-sm text-slate-500 dark:text-slate-400 mb-3">${escapeHtml(task.description)}</div>` : ''}
                 
-                <div class="badges-container">
-                    <span class="badge status-${task.status}">${task.status.replace('_', ' ')}</span>
-                    <span class="badge priority-${task.priority}">Priority: ${task.priority}</span>
+                <div class="badges-container flex flex-wrap gap-2 mb-3">
+                    <span class="badge status-${task.status} px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${task.status.replace('_', ' ')}</span>
+                    <span class="badge priority-${task.priority} px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Priority: ${task.priority}</span>
                     ${categoryHtml}
                     ${tagsHtml}
                 </div>
                 
-                <div class="task-meta">
+                <div class="task-meta flex flex-wrap gap-4 text-xs font-medium text-slate-400">
                     ${dueDateHtml}
                     <span>Created: ${new Date(task.created_at).toLocaleDateString()}</span>
                     ${task.subtasks && task.subtasks.length > 0 ? `<span>📋 ${task.subtasks.filter(s=>s.is_completed).length}/${task.subtasks.length} Subtasks</span>` : ''}
                 </div>
             </div>
-            <div class="task-actions">
-                <button type="button" class="btn-icon" onclick="event.stopPropagation(); openFocusMode(${task.id})" title="Focus Mode">🎯</button>
-                <button type="button" class="btn-icon" onclick="event.stopPropagation(); updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
-                <button type="button" class="btn-icon" onclick="event.stopPropagation(); openEditModal(${task.id})" title="Edit Task">✎</button>
-                <button type="button" class="btn-icon delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete Task">✕</button>
+            <div class="task-actions flex items-start gap-1 ml-4 border-l border-slate-200 dark:border-slate-700 pl-4">
+                <button type="button" class="btn-icon w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-primary dark:hover:text-primary-dark hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="event.stopPropagation(); openFocusMode(${task.id})" title="Focus Mode">🎯</button>
+                <button type="button" class="btn-icon w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" onclick="event.stopPropagation(); updateTaskStatus(${task.id}, '${nextStatus}')" title="${task.status === 'COMPLETED' ? 'Mark Pending' : 'Mark Complete'}">${icon}</button>
+                <button type="button" class="btn-icon w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" onclick="event.stopPropagation(); openEditModal(${task.id})" title="Edit Task">✎</button>
+                <button type="button" class="btn-icon delete w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete Task">✕</button>
             </div>
         `;
         tasksContainer.appendChild(div);
@@ -882,22 +884,22 @@ function renderKanban() {
         if (!col) return;
 
         const div = document.createElement('div');
-        div.className = 'kanban-card';
+        div.className = 'kanban-card p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer cursor-grab active:cursor-grabbing';
         div.dataset.id = task.id;
         
         let recurringHtml = task.is_recurring ? `<span title="Recurring Task (${task.recurrence_rule})">🔁</span> ` : '';
-        let tagsHtml = task.tags ? task.tags.map(t => `<span class="badge" style="background:${t.color}20; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ') : '';
+        let tagsHtml = task.tags ? task.tags.map(t => `<span class="badge px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-white dark:bg-slate-900 border" style="border-color:${t.color}; color:${t.color}">#${escapeHtml(t.name)}</span>`).join(' ') : '';
         
         div.innerHTML = `
-            <div class="kanban-card-title">${recurringHtml}${escapeHtml(task.title)}</div>
-            ${task.description ? `<div class="kanban-card-desc">${escapeHtml(task.description).substring(0, 60)}${task.description.length > 60 ? '...' : ''}</div>` : ''}
-            <div class="kanban-card-meta">
-                <span class="badge priority-${task.priority}">${task.priority}</span>
+            <div class="kanban-card-title font-semibold text-slate-800 dark:text-slate-100 mb-2">${recurringHtml}${escapeHtml(task.title)}</div>
+            ${task.description ? `<div class="kanban-card-desc text-xs text-slate-500 dark:text-slate-400 mb-3">${escapeHtml(task.description).substring(0, 60)}${task.description.length > 60 ? '...' : ''}</div>` : ''}
+            <div class="kanban-card-meta flex flex-wrap gap-1.5 mb-2">
+                <span class="badge priority-${task.priority} px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${task.priority}</span>
                 ${tagsHtml}
             </div>
-            <div class="task-actions" style="margin-top: 10px;">
-                <button type="button" class="btn-icon" onclick="event.stopPropagation(); openEditModal(${task.id})" title="Edit Task">✎</button>
-                <button type="button" class="btn-icon delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete Task">✕</button>
+            <div class="task-actions flex justify-end gap-1 border-t border-slate-100 dark:border-slate-700/50 pt-2" style="margin-top: 10px;">
+                <button type="button" class="btn-icon w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" onclick="event.stopPropagation(); openEditModal(${task.id})" title="Edit Task">✎</button>
+                <button type="button" class="btn-icon delete w-7 h-7 rounded flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete Task">✕</button>
             </div>
         `;
         
