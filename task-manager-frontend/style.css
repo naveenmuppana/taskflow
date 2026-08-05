@@ -29,7 +29,7 @@
     --info-bg: #E0F2FE;
 }
 
-body.dark {
+html.dark body {
     color-scheme: dark;
     --bg-color: #0F172A;
     --bg-accent: #020617;
@@ -61,7 +61,7 @@ body.dark {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; }
-body.dark ::-webkit-scrollbar-thumb { background: #334155; }
+html.dark ::-webkit-scrollbar-thumb { background: #334155; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
 /* Elegant Background Pattern */
@@ -72,7 +72,7 @@ body.dark ::-webkit-scrollbar-thumb { background: #334155; }
     background-image: radial-gradient(var(--text-secondary) 1px, transparent 1px);
     background-size: 24px 24px; opacity: 0.15;
 }
-body.dark .animated-bg {
+html.dark .animated-bg {
     background-image: radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
     opacity: 0.25;
 }
@@ -84,7 +84,7 @@ body.dark .animated-bg {
 }
 .glow-1 { width: 50vw; height: 50vw; max-width: 600px; max-height: 600px; background: var(--primary); top: -15%; left: -10%; }
 .glow-2 { width: 45vw; height: 45vw; max-width: 500px; max-height: 500px; background: var(--secondary); bottom: -10%; right: -5%; }
-body.dark .ambient-glow { opacity: 0.15; }
+html.dark .ambient-glow { opacity: 0.15; }
 
 /* Monument Background Outlines */
 .monument-backdrop {
